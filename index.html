@@ -747,7 +747,7 @@ function copySql(){const t=document.getElementById('sqlBox').innerText;navigator
 (function(){
 const SYNC_KEY='serge_online_cfg_v1';
 const TOK_KEY='serge_gh_pat_session';
-let CFG={owner:'',repoDb:'',path:'serge-budget-1406-db.json',branch:'main'};
+let CFG={owner:'serge-team',repoDb:'serge-budget-db',path:'serge-budget-1406-db.json',branch:'main'};
 try{const s=localStorage.getItem(SYNC_KEY);if(s){const j=JSON.parse(s);CFG={...CFG,...j}}}catch(e){}
 let oBusy=false, oPushT=null, lastEditT=0, lastPushT=0, lastPullT=0;
 function esc2(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -949,7 +949,7 @@ async function onlineHistory(){
 viewCloud=function(){
  const on=isOnline();
  if(!isAdmin()){
-  return '<div class="card"><h3>🟢 سرور مرکزی</h3><div class="muted">وضعیت: '+(on?'✅ متصل — تغییرات واحدها خودکار می‌آید (هر ~۱۵ ثانیه).':'⏳ '+(isCfg()?'توکن نشست را وارد کن (از ادمین بگیر)':'منتظر تنظیم ادمین'))+'</div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn small" onclick="pullOnline(false)">⬇️ دریافت آخرین نسخه</button><button class="btn small ghost" onclick="go(\'msg\')">💬 پیام به ادمین</button></div><div class="muted" id="cloudMsg" style="margin-top:8px"></div></div>'
+  return '<div class="card"><h3>🟢 سرور مرکزی</h3><div class="muted">وضعیت: '+(on?'✅ متصل — کارت خودکار می‌رود روی سرور و کار بقیه خودکار می‌آید.':'⏳ توکن خودت را یک‌بار وارد کن (از امیر بگیر). بعدش دیگر کاری نداری.')+'</div><div class="field" style="margin-top:10px"><label>توکن نشست من '+(tok()?'✅ ثبت شده':'⏳ ثبت نشده')+'</label><input id="oTokU" type="password" dir="ltr" placeholder="github_pat_xxxx — فقط همین مرورگر">'+'</div><div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn small" onclick="saveUnitTok()">💾 ثبت توکن من</button><button class="btn small ghost" onclick="pullOnline(false)">⬇️ دریافت آخرین نسخه</button><button class="btn small pink" onclick="clearTok()">🧹 پاک‌کردن</button></div><div class="muted" id="cloudMsg" style="margin-top:8px"></div></div>'
   +'<div class="card"><h3>🌐 آدرس ورود</h3><div class="muted">همه با یک آدرس وارد می‌شوند: <b dir="ltr">https://USERNAME.github.io/serge-budget/</b> (بعد از انتشار). هرکس یوزر/پس خودش. اگر نسخه جدید نمی‌بینی «دریافت آخرین نسخه» را بزن.</div><div class="muted">🛡️ توکن تو فقط در همین مرورگر می‌ماند، در دیتا/بکاپ/اکسل ذخیره نمی‌شود.</div></div>';
  }
  return '<div class="card"><h3>🟢 سرور مرکزی آنلاین — راهنمای اصولی ایران 👑</h3><div class="muted">معماری بدون تحریم: <b>GitHub Pages</b> (هاست، یک آدرس برای همه) + <b>فایل مرکزی در ریپوی Private</b> (دیتابیس نسخه‌دار) + <b>توکن per-device فقط در نشست</b>. سوپابیس از ایران خطای <b dir="ltr">Access from your region is restricted</b> می‌دهد، پس حذف شد. گیت‌هاب برای ایران مجوز OFAC دارد و از ایران باز است.</div>'
@@ -976,5 +976,9 @@ window.cloudPush=cloudPush;window.cloudPull=cloudPull;
 })();
 </script>
 
+<script>
+function saveUnitTok(){var v='';try{v=(document.getElementById('oTokU').value||'').trim()}catch(e){} if(!v){toast('⏳ توکن را بچسبان');return} try{sessionStorage.setItem('serge_gh_pat_session',v)}catch(e){} toast('✅ توکن تو ثبت شد — از این به بعد خودکار است'); try{if(typeof pullOnline==='function')pullOnline(true)}catch(e){} setTimeout(function(){try{go('cloud')}catch(e){}},1200);}
+(function(){const _bs=buildSide;buildSide=function(){_bs();try{const s=document.getElementById('sidebar');if(s&&!s.innerHTML.includes("data-p=\"cloud\"")){const b=document.createElement('button');b.className='nav-btn';b.setAttribute('data-p','cloud');b.setAttribute('onclick',"go('cloud')");b.innerHTML='<span class=\"dot\"></span>☁️ سرور مرکزی';s.insertBefore(b,s.children[3]||null);}}catch(e){}};})();
+</script>
 </body>
 </html>
