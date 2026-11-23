@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل بودجه 1406 سرژه | Serge Budget Panel</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800;900&display=swap');
+:root{--bg1:#0f172a;--bg2:#1e1b4b;--acc1:#8b5cf6;--acc2:#06b6d4;--acc3:#f59e0b;--acc4:#ec4899;--card:rgba(255,255,255,.07);--txt:#f1f5f9;--mut:#94a3b8;--line:rgba(255,255,255,.12);--ok:#10b981;--warn:#f59e0b;--bad:#ef4444}
+[data-theme="light"]{--bg1:#eef2ff;--bg2:#fdf4ff;--card:rgba(255,255,255,.9);--txt:#0f172a;--mut:#64748b;--line:rgba(15,23,42,.12)}
+*{box-sizing:border-box;font-family:'Vazirmatn',Tahoma,sans-serif}
+body{margin:0;color:var(--txt);background:radial-gradient(1200px 600px at 80% -10%,#7c3aed55,transparent),radial-gradient(900px 500px at 10% 10%,#06b6d455,transparent),linear-gradient(135deg,var(--bg1),var(--bg2));min-height:100vh;transition:.4s}
+a{color:inherit}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit}
+.top-glow{position:fixed;inset:0;pointer-events:none;background:radial-gradient(600px 200px at 50% 0%,#a78bfa33,transparent);z-index:0}
+#loginWrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;z-index:1}
+.login-card{width:min(1060px,100%);display:grid;grid-template-columns:1.1fr .9fr;gap:0;border-radius:28px;overflow:hidden;background:var(--card);backdrop-filter:blur(22px);border:1px solid var(--line);box-shadow:0 30px 80px #0008}
+@media(max-width:900px){.login-card{grid-template-columns:1fr}}
+.login-side{padding:44px 38px;background:linear-gradient(135deg,#7c3aed,#06b6d4 60%,#ec4899);color:#fff;position:relative;overflow:hidden}
+.login-side::after{content:'';position:absolute;width:420px;height:420px;background:radial-gradient(circle,#fff3,transparent 70%);top:-120px;left:-120px;animation:float 6s ease-in-out infinite}
+@keyframes float{50%{transform:translate(30px,30px)}}
+.login-side h1{font-size:34px;font-weight:900;margin:6px 0 8px}
+.login-side p{line-height:2;opacity:.95;font-size:14.5px}
+.badge{display:inline-flex;align-items:center;gap:8px;background:#ffffff26;border:1px solid #ffffff44;padding:6px 14px;border-radius:100px;font-size:13px}
+.feat{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}
+.feat div{background:#ffffff1e;border:1px solid #ffffff33;border-radius:16px;padding:12px;font-size:12.5px;line-height:1.9}
+.login-form{padding:36px 32px}
+.login-form h2{margin:0 0 6px;font-size:22px;font-weight:800}
+.muted{color:var(--mut);font-size:13px;line-height:2}
+.user-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
+@media(max-width:600px){.user-grid{grid-template-columns:repeat(2,1fr)}}
+.u-pick{border:2px solid var(--line);border-radius:16px;padding:12px 8px;text-align:center;cursor:pointer;transition:.25s;background:transparent;color:var(--txt)}
+.u-pick.active,.u-pick:hover{border-color:var(--acc1);background:#8b5cf622;transform:translateY(-2px)}
+.u-pick b{display:block;font-size:13px}.u-pick span{font-size:11px;color:var(--mut)}
+.field{margin:12px 0}.field label{font-size:13px;display:block;margin-bottom:6px;font-weight:700}
+.field input,.field select,.field textarea{width:100%;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:transparent;color:var(--txt);outline:none;font-size:14px}
+.field input:focus{border-color:var(--acc1);box-shadow:0 0 0 4px #8b5cf633}
+.btn{border:none;border-radius:14px;padding:12px 22px;font-weight:800;font-size:14px;background:linear-gradient(135deg,#8b5cf6,#06b6d4);color:#fff;transition:.25s;box-shadow:0 8px 24px #8b5cf655}
+.btn:hover{transform:translateY(-2px) scale(1.01);box-shadow:0 12px 30px #8b5cf677}
+.btn.ghost{background:transparent;border:1.5px solid var(--line);color:var(--txt);box-shadow:none}
+.btn.small{padding:7px 14px;font-size:12.5px;border-radius:10px}
+.btn.warn{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.btn.ok{background:linear-gradient(135deg,#10b981,#06b6d4)}
+.btn.pink{background:linear-gradient(135deg,#ec4899,#8b5cf6)}
+#app{display:none;position:relative;z-index:1}
+.layout{display:grid;grid-template-columns:270px 1fr;min-height:100vh}
+@media(max-width:1000px){.layout{grid-template-columns:1fr}.sidebar{position:fixed;inset-inline-start:0;top:0;bottom:0;width:270px;z-index:50;transform:translateX(100%);transition:.3s}.layout.open .sidebar{transform:none}}
+.sidebar{background:var(--card);backdrop-filter:blur(20px);border-inline-end:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:8px}
+.brand{display:flex;align-items:center;gap:12px;padding:8px}
+.logo{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#8b5cf6,#ec4899,#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;color:#fff;box-shadow:0 8px 20px #8b5cf666;animation:logoPulse 3s infinite}
+@keyframes logoPulse{50%{box-shadow:0 8px 30px #ec489988}}
+.brand b{font-size:17px}.brand small{display:block;color:var(--mut);font-size:11.5px}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;text-align:start;background:transparent;border:none;color:var(--txt);padding:12px 14px;border-radius:14px;font-size:13.5px;font-weight:700;transition:.2s;position:relative}
+.nav-btn:hover{background:#8b5cf622}.nav-btn.active{background:linear-gradient(135deg,#8b5cf6dd,#06b6d4cc);color:#fff;box-shadow:0 8px 20px #8b5cf644}
+.nav-btn .dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+.nav-sec{font-size:11px;color:var(--mut);margin:12px 8px 4px;font-weight:800;letter-spacing:.5px}
+.main{padding:18px 22px 90px;max-width:1300px;width:100%;margin:0 auto}
+.topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 18px;backdrop-filter:blur(16px);margin-bottom:16px}
+.topbar h2{margin:0;font-size:18px;font-weight:900}
+.chip{background:#8b5cf622;border:1px solid #8b5cf644;padding:5px 12px;border-radius:100px;font-size:12px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;backdrop-filter:blur(16px);margin-bottom:16px;box-shadow:0 10px 30px #0003}
+.card h3{margin:0 0 4px;font-size:16px;font-weight:800}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}@media(max-width:900px){.grid3{grid-template-columns:1fr}}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}@media(max-width:1000px){.grid4{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:linear-gradient(135deg,#ffffff10,#ffffff05);border:1px solid var(--line);border-radius:18px;padding:16px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;right:0;left:0;height:4px;background:linear-gradient(90deg,var(--acc1),var(--acc2),var(--acc4))}
+.kpi small{color:var(--mut);font-size:12px}.kpi b{font-size:22px;display:block;margin-top:4px}
+.kpi.ok b{color:var(--ok)}.kpi.warn b{color:var(--warn)}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px;background:transparent}
+.tbl th,.tbl td{border:1px solid var(--line);padding:8px 10px;text-align:center}
+.tbl th{background:#8b5cf633;font-weight:800}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#00000022;border:1px solid var(--line);border-radius:14px;padding:10px;margin:12px 0}
+.toolbar input[type=color]{width:36px;height:32px;border:none;border-radius:8px;background:none;padding:0}
+.toolbar select,.toolbar input[type=number]{padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--txt)}
+.sheet-wrap{overflow:auto;border-radius:14px;border:1px solid var(--line);max-height:520px}
+table.sheet{border-collapse:collapse;min-width:700px;width:100%;font-size:13px}
+.sheet th,.sheet td{border:1px solid #ffffff2a;min-width:110px;padding:0;position:relative}
+[data-theme="light"] .sheet th,[data-theme="light"] .sheet td{border-color:#0f172a22}
+.sheet td div{padding:8px;min-height:36px;outline:none}
+.sheet th{background:#7c3aed44;font-weight:800;padding:8px}
+.timeline{position:relative;padding-inline-start:26px}
+.timeline::before{content:'';position:absolute;inset-inline-start:8px;top:6px;bottom:6px;width:3px;background:linear-gradient(#8b5cf6,#06b6d4,#ec4899);border-radius:10px}
+.tl-item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;position:relative}
+.tl-item::before{content:'';position:absolute;inset-inline-start:-24px;top:16px;width:12px;height:12px;border-radius:50%;background:var(--acc2);box-shadow:0 0 0 4px #06b6d433}
+.msg{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:#ffffff08}
+.msg.unread{border-color:var(--acc4);box-shadow:0 0 0 3px #ec489933}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tab{border:1px solid var(--line);background:transparent;color:var(--txt);padding:9px 18px;border-radius:100px;font-size:13px;font-weight:800;transition:.2s}
+.tab.active{background:linear-gradient(135deg,#8b5cf6,#06b6d4);color:#fff;border-color:transparent;box-shadow:0 6px 18px #8b5cf655}
+.footer{position:fixed;bottom:0;right:0;left:0;text-align:center;font-size:11.5px;color:var(--mut);background:color-mix(in srgb,var(--bg1) 82%,transparent);backdrop-filter:blur(12px);padding:8px;border-top:1px solid var(--line);z-index:5}
+.footer b{color:var(--txt);letter-spacing:.5px}
+.toast{position:fixed;bottom:44px;left:50%;transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:12px 22px;border-radius:14px;opacity:0;transition:.3s;z-index:99;font-size:13px;border:1px solid #ffffff33}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.theme-fab{position:fixed;top:14px;left:14px;z-index:60}
+.progress{height:8px;background:#ffffff22;border-radius:100px;overflow:hidden}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,#8b5cf6,#06b6d4,#10b981);border-radius:100px;transition:1s}
+.status-ok{color:var(--ok);font-weight:800}.status-wait{color:var(--warn);font-weight:800}
+canvas{max-width:100%}
+.login-hint{background:#f59e0b22;border:1px dashed #f59e0b88;border-radius:12px;padding:10px 12px;font-size:12px;line-height:2;margin-top:12px}
+kbd{background:#0006;color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;border:1px solid #fff3}
+</style>
+</head>
+<body data-theme="dark">
+<div class="top-glow"></div>
+<button class="btn ghost small theme-fab" onclick="toggleTheme()" id="themeFab">🌙 تم تیره / روشن</button>
+
+<!-- LOGIN -->
+<div id="loginWrap">
+  <div class="login-card">
+    <div class="login-side">
+      <span class="badge">✨ بودجه سال ۱۴۰۶ • نسخه مدیریتی</span>
+      <h1>پنل بودجه یکپارچه سرژه</h1>
+      <p>آقای <b>امیر محمدی</b>، سرپرست حسابداری مدیریت و بهای تمام‌شده؛ این پنل برای اجرای پروژه بودجه ۱۴۰۶ مجموعه <b>سرژه</b> (خرده‌فروشی) و <b>گردیه</b> (عمده‌فروشی) طراحی شده؛ با کالکشن‌های <b>SS بهار و تابستان</b> و <b>FW پاییز و زمستان</b>، مانیتورینگ زنده، تعاملات بین واحدی، محاسبات بهای تمام‌شده و تعدیل تورمی و ارزی.</p>
+      <div class="feat">
+        <div>📊 مانیتورینگ لحظه‌ای<br><small>آخرین ویرایش / ثبت نهایی هر واحد</small></div>
+        <div>🔐 دسترسی تفکیکی<br><small>نام کاربری و رمز مجزا برای ۶ واحد</small></div>
+        <div>📥 ایمپورت / اکسپورت اکسل<br><small>ورود و خروج دیتا با یک کلیک</small></div>
+        <div>💱 تعدیل ارز و تورم<br><small>گزارش ریالی + دلاری به‌روز</small></div>
+      </div>
+      <div style="margin-top:18px;font-size:12px;opacity:.9">واحدها: مالی • تامین • تولید • فروش • مارکتینگ • منابع انسانی</div>
+    </div>
+    <div class="login-form">
+      <h2>ورود به پنل بودجه</h2>
+      <div class="muted">نقش خود را انتخاب کنید، سپس نام کاربری و رمز را وارد کنید. مدیر پروژه (ادمین) دسترسی کامل دارد.</div>
+      <div class="user-grid" id="userGrid"></div>
+      <div class="grid2">
+        <div class="field"><label>نام کاربری</label><input id="inUser" placeholder="مثلا: amir.mohammadi"></div>
+        <div class="field"><label>رمز عبور</label><input id="inPass" type="password" placeholder="••••••"></div>
+      </div>
+      <button class="btn" style="width:100%" onclick="doLogin()">🚀 ورود به پنل</button>
+      <div class="login-hint" id="loginHint">💡 <b>دسترسی دمو (کلیک کنید تا پر شود):</b><br>ادمین: <kbd>amir.mohammadi</kbd> / <kbd>Serge1406*</kbd> &nbsp; • مالی: <kbd>mali</kbd>/<kbd>mali1406</kbd> • تامین: <kbd>tamin</kbd>/<kbd>tamin1406</kbd> • تولید: <kbd>tolid</kbd>/<kbd>tolid1406</kbd> • فروش: <kbd>forosh</kbd>/<kbd>forosh1406</kbd> • مارکتینگ: <kbd>mark</kbd>/<kbd>mark1406</kbd> • منابع انسانی: <kbd>hr</kbd>/<kbd>hr1406</kbd></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="layout" id="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <div class="main">
+      <div class="topbar">
+        <button class="btn ghost small" onclick="document.getElementById('layout').classList.toggle('open')">☰ منو</button>
+        <h2 id="pageTitle">میزکار</h2>
+        <span class="chip" id="roleChip"></span>
+        <span class="chip" id="dateChip">📅 امروز: ۲ آذر ۱۴۰۵ • بودجه ۱۴۰۶</span>
+        <span class="chip" id="fxChip">💵 دلار: -</span>
+        <span class="chip" id="cloudChip">☁️ حالت محلی</span>
+        <span style="flex:1"></span>
+        <button class="btn ghost small" onclick="toggleTheme()">🌓 تم</button>
+        <button class="btn ghost small" onclick="backupJSON()">💾 بکاپ</button>
+        <button class="btn warn small" onclick="logout()">خروج ⏻</button>
+      </div>
+      <div id="content"></div>
+    </div>
+  </div>
+</div>
+<div class="footer">Designed & Developed by <b>Amair Mohammadi</b> • مدیر حسابداری مدیریت و بهای تمام‌شده • Serge Budget 1406 • تمامی داده‌ها با مهر زمانی ثبت می‌شوند</div>
+<div class="toast" id="toast"></div>
+<script>
+// ============ CORE ============
+const USERS=[
+ {id:'admin',name:'امیر محمدی (ادمین بودجه)',unit:'admin',user:'amir.mohammadi',pass:'Serge1406*',icon:'👑',desc:'مدیر پروژه'},
+ {id:'mali',name:'واحد مالی',unit:'mali',user:'mali',pass:'mali1406',icon:'💰',desc:'مالی'},
+ {id:'tamin',name:'واحد تامین',unit:'tamin',user:'tamin',pass:'tamin1406',icon:'📦',desc:'تامین'},
+ {id:'tolid',name:'واحد تولید',unit:'tolid',user:'tolid',pass:'tolid1406',icon:'🏭',desc:'تولید'},
+ {id:'forosh',name:'واحد فروش',unit:'forosh',user:'forosh',pass:'forosh1406',icon:'🛍️',desc:'فروش'},
+ {id:'mark',name:'واحد مارکتینگ',unit:'mark',user:'mark',pass:'mark1406',icon:'📣',desc:'مارکتینگ'},
+ {id:'hr',name:'منابع انسانی',unit:'hr',user:'hr',pass:'hr1406',icon:'👥',desc:'منابع انسانی'},
+];
+const UNITS=['mali','tamin','tolid','forosh','mark','hr'];
+const UNIT_NAMES={mali:'مالی',tamin:'تامین',tolid:'تولید',forosh:'فروش',mark:'مارکتینگ',hr:'منابع انسانی',admin:'ادمین'};
+let DB=null, ME=null, PAGE='desk', SEL_TABLE=0, SEL_SUB=null;
+const LSKEY='serge_budget_1406_v1';
+function nowStr(){return new Date().toLocaleString('fa-IR',{dateStyle:'medium',timeStyle:'short'})}
+function nowISO(){return new Date().toISOString()}
+function fa(n){if(n==null||n===''||isNaN(Number(n)))return n||'—';return Number(n).toLocaleString('fa-IR')}
+function en2fa(s){return String(s).replace(/\d/g,d=> '۰۱۲۳۴۵۶۷۸۹'[d])}
+function num(v){return Number(String(v??'').replace(/[,٬،\s]/g,'').replace(/[^0-9.\-]/g,''))||0}
+function rial(v){return fa(v)+' ریال'}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+function toggleTheme(){const b=document.body;const cur=b.getAttribute('data-theme')==='dark'?'light':'dark';b.setAttribute('data-theme',cur);localStorage.setItem('serge_theme',cur);toast(cur==='dark'?'🌙 تم تیره فعال شد':'☀️ تم روشن فعال شد')}
+document.body.setAttribute('data-theme',localStorage.getItem('serge_theme')||'dark');
+// ---- default DB ----
+function blankCell(v=''){return {v:v,b:0,c:'#ffffff',bg:'transparent',s:13}}
+function mkTable(title,headers,rows){const data=[headers.map(h=>({...blankCell(h),b:1,bg:'#7c3aed55'}))];for(let i=0;i<rows;i++){data.push(headers.map(()=>blankCell('')))}return {id:'t'+Math.random().toString(36).slice(2,7),title:title,data:data,updated:nowISO(),by:'admin'}}
+function defaultDB(){
+ const u={};
+ u.mali={subs:[{name:'ستاد مالی',staff:[{pos:'رئیس مالی',n:1,sal:900000000}],op:[{t:'نرم‌افزار و حسابرسی',a:1200000000}],nonop:[{t:'پذیرایی پرسنل',a:180000000}]}],tables:[mkTable('بودجه هزینه مالی — حقوق / عملیاتی / غیرعملیاتی',['شرح / فصل','نوع (عملیاتی/غیرعملیاتی)','مبلغ سالانه (ریال)','توضیحات'],4)],final:null,lastEdit:null};
+ u.tamin={subs:[{name:'تامین پارچه',staff:[],op:[{t:'خرید پارچه SS',a:0}],nonop:[]}],tables:[mkTable('برآورد تامین مواد اولیه 1406 — متراژ و مبلغ',['کالکشن (SS/FW)','کارگروه','متراژ (متر)','مبلغ (ریال)','تامین‌کننده'],4)],final:null,lastEdit:null};
+ u.tolid={subs:[{name:'الگوسازی و طراحی',staff:[{pos:'طراح ارشد',n:2,sal:1400000000}],op:[{t:'خرید کالای نمونه از بازار',a:800000000},{t:'آموزش',a:300000000},{t:'سفر',a:400000000}],nonop:[{t:'پذیرایی',a:120000000}]},{name:'برش',staff:[],op:[],nonop:[]},{name:'بسته‌بندی',staff:[],op:[],nonop:[]},{name:'کنترل کیفیت',staff:[],op:[],nonop:[]},{name:'انبار پارچه',staff:[],op:[],nonop:[]},{name:'انبار محصول',staff:[],op:[],nonop:[]}],tables:[mkTable('تولید ماهانه به تفکیک کارگروه (تعداد)',['کارگروه','فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند','جمع سالانه'],3)],final:null,lastEdit:null};
+ u.forosh={subs:[{name:'فروشگاه ونک',staff:[{pos:'فروشنده ارشد',n:4,sal:600000000}],op:[{t:'اجاره',a:6000000000}],nonop:[{t:'پذیرایی فروشگاه',a:200000000}]},{name:'فروشگاه گردیه (عمده)',staff:[],op:[],nonop:[]}],tables:[mkTable('فروش ماهانه به تفکیک کارگروه + تخفیف و پروموشن',['ماه','کالکشن','کارگروه','تعداد فروش','مبلغ فروش (ریال)','تخفیف/پروموشن (ریال)'],2)],final:null,lastEdit:null};
+ u.mark={subs:[{name:'دیجیتال مارکتینگ',staff:[{pos:'کارشناس تبلیغات',n:3,sal:750000000}],op:[{t:'کمپین اینستاگرام SS',a:3000000000},{t:'بیلبورد FW',a:2000000000}],nonop:[{t:'پذیرایی پرسنل',a:150000000}]}],tables:[mkTable('بودجه مارکتینگ — نیروی انسانی / تبلیغات (عملیاتی) / پذیرایی (غیرعملیاتی)',['شرح','فصل','مبلغ (ریال)','کالکشن'],2)],final:null,lastEdit:null};
+ u.hr={subs:[{name:'جذب و آموزش',staff:[],op:[],nonop:[]}],tables:[mkTable('پیش‌بینی نیروی انسانی و هزینه پرسنلی',['رده / پوزیشن','تعداد','سرانه سالانه (ریال)','جمع (ریال)'],1)],final:null,lastEdit:null};
+ return {units:u,ann:[{id:'a1',title:'🚀 استارت بودجه ۱۴۰۶ — خوش آمدید',text:'همکاران گرامی؛ از امروز ۲ آذر ۱۴۰۵ فرآیند بودجه ۱۴۰۶ سرژه آغاز شد. لطفا تا ۱۵ آذر جداول اولیه خود را تکمیل و «ثبت نهایی» کنید. پس از ثبت نهایی، ویرایش فقط با مجوز ادمین (امیر محمدی) امکان‌پذیر است. تایم‌لاین کامل در همین تب اطلاع‌رسانی منتشر می‌شود.',date:nowISO(),by:'امیر محمدی'}],msgs:[],reads:{},fx:{usd:1150000,inflation:32,growth:15},calc:{mat:0,wip1:0,wip2:0,fg1:0,fg2:0,extra:0},timeline:[{t:'۲ آذر — ابلاغ دستورالعمل و استارت',d:'ارسال پنل و نام کاربری واحدها'},{t:'۱۵ آذر — ددلاین ثبت نهایی واحدها',d:'تکمیل جداول + زیرمجموعه‌ها'},{t:'۲۰ آذر — جلسات جمع‌بندی',d:'تولید، فروش و تامین'},{t:'۳۰ آذر — کتابچه بودجه هیئت‌مدیره',d:'سود سرژه / گردیه / تلفیقی'}],gh:{token:'',owner:'',repo:'',path:'serge-budget-1406.json',branch:'main'}};
+}
+function save(){localStorage.setItem(LSKEY,JSON.stringify(DB));}
+function load(){try{const s=localStorage.getItem(LSKEY);if(s){DB=JSON.parse(s);return}}catch(e){}DB=defaultDB();save();}
+// ---- login ----
+let pick='admin';
+function renderPicks(){const g=document.getElementById('userGrid');g.innerHTML=USERS.map(x=>'<button class="u-pick '+(pick===x.id?'active':'')+'" onclick="pickUser(\''+x.id+'\')"><span style="font-size:22px">'+x.icon+'</span><b>'+x.name+'</b><span>'+x.user+'</span></button>').join('')}
+function pickUser(id){pick=id;const u=USERS.find(x=>x.id===id);document.getElementById('inUser').value=u.user;document.getElementById('inPass').value=u.pass;renderPicks()}
+function doLogin(){const u=document.getElementById('inUser').value.trim(),p=document.getElementById('inPass').value;const f=USERS.find(x=>x.user===u&&x.pass===p);if(!f){toast('❌ نام کاربری یا رمز اشتباه است');return}ME=f;document.getElementById('loginWrap').style.display='none';document.getElementById('app').style.display='block';document.getElementById('roleChip').textContent=f.icon+' '+f.name;buildSide();go('desk');toast('خوش آمدید '+f.name+' ✨')}
+function logout(){location.reload()}
+// ============ SIDEBAR & ROUTER ============
+function isAdmin(){return ME&&ME.unit==='admin'}
+function myUnit(){return ME.unit}
+function buildSide(){
+ const s=document.getElementById('sidebar');
+ let h='<div class="brand"><div class="logo">S</div><div><b>سرژه • بودجه ۱۴۰۶</b><small>SERGE BUDGET PANEL</small></div></div>';
+ h+='<div class="nav-sec">— میزکار —</div>';
+ h+='<button class="nav-btn" data-p="desk" onclick="go(\'desk\')"><span class="dot"></span>🏠 میزکار '+(isAdmin()?'ادمین':'واحد')+'</button>';
+ if(!isAdmin()){
+  h+='<div class="nav-sec">— واحد '+UNIT_NAMES[myUnit()]+' —</div>';
+  h+='<button class="nav-btn" data-p="mytable" onclick="go(\'mytable\')"><span class="dot"></span>📝 جداول و ورود دیتا</button>';
+  h+='<button class="nav-btn" data-p="sub" onclick="go(\'sub\')"><span class="dot"></span>🏢 زیرمجموعه‌ها و هزینه‌ها</button>';
+  h+='<button class="nav-btn" data-p="spec" onclick="go(\'spec\')"><span class="dot"></span>🎯 فرم تخصصی واحد</button>';
+  h+='<button class="nav-btn" data-p="ann" onclick="go(\'ann\')"><span class="dot"></span>📢 اطلاع‌رسانی و تایم‌لاین</button>';
+  h+='<button class="nav-btn" data-p="msg" onclick="go(\'msg\')"><span class="dot"></span>💬 تعاملات بین واحدی</button>';
+ }else{
+  h+='<div class="nav-sec">— مدیریت بودجه —</div>';
+  h+='<button class="nav-btn" data-p="units" onclick="go(\'units\')"><span class="dot"></span>🏢 ورود به واحدها</button>';
+  h+='<button class="nav-btn" data-p="monitor" onclick="go(\'monitor\')"><span class="dot"></span>📊 مانیتورینگ زنده</button>';
+  h+='<button class="nav-btn" data-p="ann" onclick="go(\'ann\')"><span class="dot"></span>📢 اطلاع‌رسانی و تایم‌لاین</button>';
+  h+='<button class="nav-btn" data-p="msg" onclick="go(\'msg\')"><span class="dot"></span>💬 تعاملات</button>';
+  h+='<button class="nav-btn" data-p="calc" onclick="go(\'calc\')"><span class="dot"></span>🧮 محاسبات بهای تمام‌شده</button>';
+  h+='<button class="nav-btn" data-p="report" onclick="go(\'report\')"><span class="dot"></span>📈 سود و زیان سرژه / گردیه</button>';
+  h+='<button class="nav-btn" data-p="fx" onclick="go(\'fx\')"><span class="dot"></span>💱 ارز، تورم و تعدیل</button>';
+  h+='<button class="nav-btn" data-p="gh" onclick="go(\'gh\')"><span class="dot"></span>☁️ ذخیره‌سازی GitHub</button><button class="nav-btn" data-p="cloud" onclick="go(\'cloud\')"><span class="dot"></span>☁️ سرور ابری و انتشار وب</button>';
+ }
+ h+='<div class="card" style="margin-top:14px;font-size:12px;line-height:2">👑 ادمین: امیر محمدی<br><span class="muted">واحدها ۶ گانه • ثبت نهایی قفل می‌شود و فقط با مجوز ادمین باز می‌شود.</span><div class="progress" style="margin-top:8px"><i id="sideProg" style="width:0%"></i></div><small class="muted" id="sideProgT"></small></div>';
+ s.innerHTML=h;updateProg();
+}
+function updateProg(){let done=0;UNITS.forEach(k=>{if(DB.units[k].final)done++});const p=Math.round(done/6*100);setTimeout(()=>{const e=document.getElementById('sideProg');if(e){e.style.width=p+'%';document.getElementById('sideProgT').textContent='پیشرفت ثبت نهایی: '+en2fa(p)+'% ('+en2fa(done)+' از ۶ واحد)'}},100)}
+function go(p){PAGE=p;document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.p===p));document.getElementById('layout').classList.remove('open');render();window.scrollTo({top:0,behavior:'smooth'})}
+function render(){
+ const c=document.getElementById('content');
+ document.getElementById('fxChip').textContent='💵 دلار: '+fa(DB.fx.usd)+' ریال • تورم '+en2fa(DB.fx.inflation)+'%';
+ if(PAGE==='desk')return c.innerHTML=viewDesk();
+ if(PAGE==='mytable')return c.innerHTML=viewMyTable();
+ if(PAGE==='sub')return c.innerHTML=viewSub(myUnit());
+ if(PAGE==='spec')return c.innerHTML=viewSpec(myUnit());
+ if(PAGE==='ann')return c.innerHTML=viewAnn();
+ if(PAGE==='msg')return c.innerHTML=viewMsg();
+ if(PAGE==='units')return c.innerHTML=viewUnits();
+ if(PAGE==='monitor')return c.innerHTML=viewMonitor();
+ if(PAGE==='calc')return c.innerHTML=viewCalc();
+ if(PAGE==='report')return c.innerHTML=viewReport();
+ if(PAGE==='fx')return c.innerHTML=viewFx();
+ if(PAGE==='gh')return c.innerHTML=viewGh();
+ if(PAGE==='cloud')return c.innerHTML=viewCloud();
+ if(PAGE.startsWith('unit:'))return c.innerHTML=viewUnitAdmin(PAGE.split(':')[1]);
+}
+// ============ DESK ============
+function viewDesk(){
+ if(isAdmin()){
+  let rows=UNITS.map(k=>{const u=DB.units[k];return '<tr><td>'+UNIT_NAMES[k]+'</td><td>'+(u.lastEdit?nowFa(u.lastEdit):'—')+'</td><td>'+(u.final?'<span class="status-ok">✅ نهایی '+nowFa(u.final.date)+'</span>':'<span class="status-wait">⏳ در حال تکمیل</span>')+'</td><td><button class="btn small" onclick="go(\'unit:'+k+'\')">ورود به '+UNIT_NAMES[k]+' ↗</button></td></tr>'}).join('');
+  return '<div class="card"><h3>👑 میزکار ادمین — امیر محمدی</h3><div class="muted">طراحی جدول اولیه برای هر واحد، مشاهده دیتای ارسالی با همان قالب خودشان، مانیتورینگ و محاسبات. برای طراحی فرم اولیه وارد هر واحد شوید.</div><div class="grid4" style="margin-top:14px"><div class="kpi"><small>واحدهای نهایی‌شده</small><b>'+en2fa(UNITS.filter(k=>DB.units[k].final).length)+' از ۶</b></div><div class="kpi"><small>نرخ دلار (ریال)</small><b>'+fa(DB.fx.usd)+'</b></div><div class="kpi"><small>تورم سالانه</small><b>'+en2fa(DB.fx.inflation)+'%</b></div><div class="kpi"><small>پیام‌های خوانده‌نشده</small><b>'+en2fa(DB.msgs.filter(m=>m.to==='admin'&&!m.readAt).length)+'</b></div></div></div>'
+  +'<div class="grid2"><div class="card"><h3>📊 نمودار وضعیت واحدها</h3><div style="height:260px"><canvas id="ch1"></canvas></div></div><div class="card"><h3>📢 آخرین اطلاعیه</h3><div class="tl-item"><b>'+DB.ann[DB.ann.length-1].title+'</b><div class="muted">'+DB.ann[DB.ann.length-1].text.slice(0,220)+'...</div><button class="btn small ghost" onclick="go(\'ann\')">مشاهده همه</button></div><h3 style="margin-top:12px">⚡ دسترسی سریع</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" onclick="go(\'monitor\')">مانیتورینگ</button><button class="btn small pink" onclick="go(\'calc\')">بهای تمام‌شده</button><button class="btn small ok" onclick="go(\'report\')">سود و زیان</button><button class="btn small ghost" onclick="exportAll()">اکسپورت کل اکسل</button></div></div></div>'
+  +'<div class="card"><h3>🏢 جدول ورود به واحدها</h3><div style="overflow:auto"><table class="tbl"><tr><th>واحد</th><th>آخرین ویرایش</th><th>وضعیت</th><th>عملیات</th></tr>'+rows+'</table></div></div><script>drawDesk()<\/script>';
+ }
+ const k=myUnit(),u=DB.units[k];
+ const locked=u.final?true:false;
+ return '<div class="card"><h3>'+(USERS.find(x=>x.id===k)||{}).icon+' داشبورد '+UNIT_NAMES[k]+'</h3><div class="muted">وضعیت: '+(locked?'🔒 ثبت نهایی شده ('+nowFa(u.final.date)+') — ویرایش فقط با مجوز ادمین':'✏️ در حال تکمیل — یادتان باشد «ثبت نهایی» کنید')+'</div><div class="grid3" style="margin-top:12px"><div class="kpi"><small>تعداد جداول</small><b>'+en2fa(u.tables.length)+'</b></div><div class="kpi"><small>زیرمجموعه‌ها</small><b>'+en2fa(u.subs.length)+'</b></div><div class="kpi '+(locked?'ok':'warn')+'"><small>وضعیت</small><b>'+(locked?'نهایی ✅':'باز ⏳')+'</b></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn small" onclick="go(\'mytable\')">ورود دیتا 📝</button><button class="btn small ghost" onclick="go(\'sub\')">زیرمجموعه‌ها 🏢</button><button class="btn small pink" onclick="go(\'msg\')">تعاملات 💬</button>'+(locked?'':'<button class="btn small ok" onclick="finalizeUnit()">✅ ثبت و نهایی‌کردن</button>')+'</div></div>'
+ +'<div class="grid2"><div class="card"><h3>📢 آخرین اطلاعیه مدیر پروژه</h3>'+annPreview()+'</div><div class="card"><h3>⏱️ تایم‌لاین بودجه ۱۴۰۶</h3><div class="timeline">'+DB.timeline.map(t=>'<div class="tl-item"><b>'+t.t+'</b><div class="muted">'+t.d+'</div></div>').join('')+'</div></div></div>';
+}
+function nowFa(iso){try{return new Date(iso).toLocaleString('fa-IR',{dateStyle:'medium',timeStyle:'short'})}catch(e){return '—'}}
+function annPreview(){const a=DB.ann[DB.ann.length-1];return '<div class="tl-item"><b>'+a.title+'</b><div class="muted">'+a.text+'</div><div class="muted" style="margin-top:6px">📅 '+nowFa(a.date)+' • '+a.by+'</div></div>'}
+// ============ TABLE EDITOR ============
+function curUnitKey(){if(isAdmin()&&PAGE.startsWith('unit:'))return PAGE.split(':')[1];return myUnit()}
+function viewMyTable(){return viewUnitTables(curUnitKey(),false)}
+function viewUnitAdmin(k){return viewUnitTables(k,true)}
+function viewUnits(){
+ let cards=UNITS.map(k=>{const u=DB.units[k];return '<div class="kpi"><small>'+UNIT_NAMES[k]+'</small><b style="font-size:15px">'+(u.final?'✅ نهایی':'⏳ باز')+'</b><div class="muted">'+u.tables.length+' جدول • '+u.subs.length+' زیرمجموعه</div><div style="margin-top:8px;display:flex;gap:6px"><button class="btn small" onclick="go(\'unit:'+k+'\')">ورود ↗</button>'+(u.final?'<button class="btn small warn" onclick="unlockUnit(\''+k+'\')">🔓 بازگشایی</button>':'')+'</div></div>'}).join('');
+ return '<div class="card"><h3>🏢 ورود به واحدها — مشاهده با همان جدول خودشان</h3><div class="muted">فرم اولیه را شما طراحی می‌کنید؛ واحدها می‌توانند ردیف/ستون اضافه و استایل بدهند. همه توضیحات و فرمت‌ها حفظ می‌شود.</div><div class="grid3" style="margin-top:12px">'+cards+'</div></div>';
+}
+function viewUnitTables(k,adminView){
+ const u=DB.units[k];const locked=u.final&&!isAdmin();
+ const tabs=u.tables.map((t,i)=>'<button class="tab '+(i===SEL_TABLE?'active':'')+'" onclick="SEL_TABLE='+i+';render()">📄 '+t.title.slice(0,28)+'</button>').join('');
+ const t=u.tables[SEL_TABLE]||u.tables[0];SEL_TABLE=u.tables.indexOf(t);if(!t)return '<div class="card">جدولی وجود ندارد <button class="btn small" onclick="addTable()">+ ساخت جدول</button></div>';
+ return '<div class="card"><h3>'+(adminView?'👁️ واحد '+UNIT_NAMES[k]+' (نمای ادمین)':'📝 جداول '+UNIT_NAMES[k])+'</h3><div class="muted">ویرایش زنده با فونت، رنگ، سایز، ضخامت خطوط، رنگ سلول/ردیف/ستون • ایمپورت/اکسپورت اکسل • '+(locked?'🔒 قفل نهایی — فقط ادمین':'✏️ قابل ویرایش')+'</div>'
+ +'<div class="tabs" style="margin-top:12px">'+tabs+'<button class="tab" onclick="addTable()">＋ جدول جدید</button></div>'
+ +'<div class="field"><label>عنوان جدول</label><input value="'+t.title+'" '+(locked?'disabled':'')+' onchange="renameTable(this.value)"></div>'
+ +'<div class="toolbar">'
+ +'<button class="btn small ghost" onclick="fmtBold()">B ضخیم</button>'
+ +'<select onchange="fmtSize(this.value)"><option>سایز فونت</option><option>11</option><option>13</option><option>15</option><option>18</option><option>22</option></select>'
+ +'<label style="font-size:12px">رنگ متن <input type="color" id="cText" value="#ffffff"></label>'
+ +'<label style="font-size:12px">رنگ سلول <input type="color" id="cBg" value="#8b5cf6"></label>'
+ +'<button class="btn small ghost" onclick="applyColor()">🎨 اعمال رنگ</button>'
+ +'<button class="btn small ghost" onclick="addRow()">＋ ردیف</button><button class="btn small ghost" onclick="delRow()">− ردیف</button>'
+ +'<button class="btn small ghost" onclick="addCol()">＋ ستون</button><button class="btn small ghost" onclick="delCol()">− ستون</button>'
+ +'<button class="btn small ghost" onclick="exportTable()">📤 اکسپورت اکسل</button>'
+ +'<label class="btn small ghost" style="cursor:pointer">📥 ایمپورت اکسل<input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importTable(event)"></label>'
+ +'</div>'
+ +'<div class="muted" style="font-size:12px">💡 روی هر سلول کلیک کنید و تایپ کنید (اعداد ریالی با جداکننده سه‌رقم خودکار). برای رنگی‌کردن: ابتدا سلول را انتخاب (کلیک) بعد رنگ بزنید.</div>'
+ +'<div class="sheet-wrap"><table class="sheet" id="sheet">'+sheetHTML(t,locked)+'</table></div>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'
+ +(isAdmin()?'<button class="btn small warn" onclick="delTable()">🗑️ حذف جدول</button>':'')
+ +(locked?'':'<button class="btn small ok" onclick="saveTable()">💾 ذخیره</button>')
+ +(!isAdmin()&&!locked?'<button class="btn small ok" onclick="finalizeUnit()">✅ ثبت و نهایی‌کردن</button>':'')
+ +(isAdmin()&&u.final?'<button class="btn small warn" onclick="unlockUnit(\''+k+'\')">🔓 اجازه ویرایش مجدد</button>':'')
+ +'</div>'
+ +(isAdmin()?'<div class="muted" style="margin-top:8px">آخرین ویرایش: '+(u.lastEdit?nowFa(u.lastEdit):'—')+' • ثبت نهایی: '+(u.final?nowFa(u.final.date):'—')+'</div>':'')
+ +'</div>';
+}
+let SEL_CELL={r:1,c:0};
+function sheetHTML(t,locked){
+ let h='';
+ for(let r=0;r<t.data.length;r++){h+='<tr>';for(let c=0;c<t.data[r].length;c++){const cell=t.data[r][c];
+  if(r===0)h+='<th contenteditable="'+(!locked)+'" oninput="cellIn('+r+','+c+',this)" onclick="selC('+r+','+c+',this)" style="color:'+cell.c+';background:'+cell.bg+'">'+(cell.v??'')+'</th>';
+  else h+='<td onclick="selC('+r+','+c+',this)" style="background:'+cell.bg+'"><div contenteditable="'+(!locked)+'" oninput="cellIn('+r+','+c+',this)" onfocus="selC('+r+','+c+',this)" style="color:'+cell.c+';font-weight:'+(cell.b?'800':'400')+';font-size:'+cell.s+'px">'+(cell.v??'')+'</div></td>';}
+  h+='</tr>';}
+ return h;
+}
+function selC(r,c,el){SEL_CELL={r:r,c:c};document.querySelectorAll('.sheet td,.sheet th').forEach(x=>x.style.outline='');if(el)el.style.outline='2px solid #06b6d4'}
+function cellIn(r,c,el){const k=curUnitKey();let v=el.innerText;DB.units[k].tables[SEL_TABLE].data[r][c].v=v;autoSep(el,v);DB.units[k].lastEdit=nowISO();save();}
+function autoSep(el,v){const n=num(v);if(n>999&&/^[0-9٬,۰-۹\s]+$/.test(v)){/* keep typing */}}
+function fmtBold(){const k=curUnitKey(),t=DB.units[k].tables[SEL_TABLE];const cl=t.data[SEL_CELL.r][SEL_CELL.c];cl.b=cl.b?0:1;save();render();toast('✏️ ضخامت اعمال شد')}
+function fmtSize(v){if(!parseInt(v))return;const k=curUnitKey();DB.units[k].tables[SEL_TABLE].data[SEL_CELL.r][SEL_CELL.c].s=parseInt(v);save();render()}
+function applyColor(){const k=curUnitKey();const tx=document.getElementById('cText').value,bg=document.getElementById('cBg').value;const cl=DB.units[k].tables[SEL_TABLE].data[SEL_CELL.r][SEL_CELL.c];cl.c=tx;cl.bg=bg;save();render();toast('🎨 رنگ اعمال شد')}
+function addRow(){const k=curUnitKey(),t=DB.units[k].tables[SEL_TABLE];const n=t.data[0].length;const row=[];for(let i=0;i<n;i++)row.push(blankCell(''));t.data.push(row);save();render()}
+function delRow(){const k=curUnitKey(),t=DB.units[k].tables[SEL_TABLE];if(t.data.length<=2){toast('حداقل یک ردیف دیتا لازم است');return}t.data.splice(SEL_CELL.r,1);save();render()}
+function addCol(){const k=curUnitKey(),t=DB.units[k].tables[SEL_TABLE];t.data.forEach(r=>r.push(blankCell('')));save();render()}
+function delCol(){const k=curUnitKey(),t=DB.units[k].tables[SEL_TABLE];if(t.data[0].length<=1){toast('حداقل یک ستون لازم است');return}t.data.forEach(r=>r.splice(SEL_CELL.c,1));save();render()}
+function addTable(){const k=curUnitKey();const name=prompt('عنوان جدول جدید:','جدول بودجه '+UNIT_NAMES[k]);if(!name)return;DB.units[k].tables.push(mkTable(name,['شرح','مبلغ (ریال)','توضیحات'],3));SEL_TABLE=DB.units[k].tables.length-1;save();render()}
+function renameTable(v){DB.units[curUnitKey()].tables[SEL_TABLE].title=v;save()}
+function delTable(){if(!confirm('جدول حذف شود؟'))return;DB.units[curUnitKey()].tables.splice(SEL_TABLE,1);SEL_TABLE=0;save();render()}
+function saveTable(){const k=curUnitKey();DB.units[k].lastEdit=nowISO();DB.units[k].tables[SEL_TABLE].updated=nowISO();DB.units[k].tables[SEL_TABLE].by=isAdmin()?'admin':k;save();updateProg();toast('💾 ذخیره شد — '+nowStr());render()}
+function finalizeUnit(){const k=isAdmin()?curUnitKey():myUnit();if(!confirm('ثبت نهایی '+UNIT_NAMES[k]+' انجام شود؟ بعد از آن ویرایش فقط با مجوز ادمین ممکن است.'))return;DB.units[k].final={date:nowISO(),by:isAdmin()?'admin':k};DB.units[k].lastEdit=nowISO();save();updateProg();toast('✅ ثبت نهایی شد');render()}
+function unlockUnit(k){if(!confirm('ویرایش مجدد برای '+UNIT_NAMES[k]+' باز شود؟'))return;DB.units[k].final=null;DB.units[k].lastEdit=nowISO();save();updateProg();toast('🔓 بازگشایی شد');render()}
+// ============ SUBUNITS ============
+function viewSub(k){
+ const u=DB.units[k];const locked=u.final&&!isAdmin();
+ let h='<div class="card"><h3>🏢 زیرمجموعه‌های '+UNIT_NAMES[k]+' — حقوق / عملیاتی / غیرعملیاتی</h3><div class="muted">هر زیرمجموعه: پوزیشن و تعداد پرسنل + هزینه‌های عملیاتی (مستقیم) و غیرعملیاتی (سربار غیرمستقیم) با فصل و شرح مجزا • مبالغ به ریال با جداکننده سه‌رقم + معادل دلاری</div>';
+ u.subs.forEach((s,i)=>{
+  const totStaff=s.staff.reduce((a,x)=>a+num(x.n)*num(x.sal),0);
+  const totOp=s.op.reduce((a,x)=>a+num(x.a),0),totNon=s.nonop.reduce((a,x)=>a+num(x.a),0);
+  h+='<div class="card" style="background:#ffffff06"><h3>📌 '+s.name+' <small class="muted">— جمع: '+fa(totStaff+totOp+totNon)+' ریال</small></h3>'
+  +'<div class="grid3">'
+  +'<div><b style="font-size:13px">👥 نیروی انسانی</b>'+s.staff.map((p,j)=>'<div class="msg">🏷️ '+p.pos+' • تعداد: '+en2fa(p.n)+' • سرانه: '+fa(p.sal)+'<br><small class="muted">جمع: '+fa(num(p.n)*num(p.sal))+' ریال ≈ $'+fa(Math.round(num(p.n)*num(p.sal)/DB.fx.usd))+'</small>'+(locked?'':'<br><button class="btn small ghost" onclick="delStaff(\''+k+'\','+i+','+j+')">حذف</button>')+'</div>').join('')+(locked?'':'<div class="grid3"><input id="np'+i+'" placeholder="پوزیشن" style="padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--txt)"><input id="nn'+i+'" type="number" placeholder="تعداد" style="padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--txt)"><input id="ns'+i+'" placeholder="سرانه سالانه ریال" style="padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--txt)"></div><button class="btn small" style="margin-top:6px" onclick="addStaff(\''+k+'\','+i+')">+ پرسنل</button>')+'</div>'
+  +'<div><b style="font-size:13px">⚙️ عملیاتی (مستقیم)</b>'+s.op.map((p,j)=>'<div class="msg">✅ '+p.t+' • '+fa(p.a)+' ریال'+(locked?'':'<br><button class="btn small ghost" onclick="delCost(\''+k+'\','+i+',\'op\','+j+')">حذف</button>')+'</div>').join('')+(locked?'':'<div style="display:flex;gap:6px;margin-top:6px"><input id="op'+i+'" placeholder="شرح هزینه عملیاتی" style="flex:2;padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--txt)"><input id="opa'+i+'" placeholder="مبلغ ریال" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--txt)"></div><button class="btn small" style="margin-top:6px" onclick="addCost(\''+k+'\','+i+',\'op\')">+ عملیاتی</button>')+'</div>'
+  +'<div><b style="font-size:13px">🧾 غیرعملیاتی (سربار غیرمستقیم)</b>'+s.nonop.map((p,j)=>'<div class="msg">📎 '+p.t+' • '+fa(p.a)+' ریال'+(locked?'':'<br><button class="btn small ghost" onclick="delCost(\''+k+'\','+i+',\'nonop\','+j+')">حذف</button>')+'</div>').join('')+(locked?'':'<div style="display:flex;gap:6px;margin-top:6px"><input id="no'+i+'" placeholder="شرح غیرعملیاتی" style="flex:2;padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--txt)"><input id="noa'+i+'" placeholder="مبلغ ریال" style="flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--txt)"></div><button class="btn small" style="margin-top:6px" onclick="addCost(\''+k+'\','+i+',\'nonop\')">+ غیرعملیاتی</button>')+'</div>'
+  +'</div>'+(locked||!isAdmin()&&false?'':'')+(locked?'':'<div style="margin-top:8px"><button class="btn small warn" onclick="delSub(\''+k+'\','+i+')">حذف زیرمجموعه</button></div>')+'</div>';
+ });
+ if(!locked)h+='<div style="display:flex;gap:8px"><input id="newSub" placeholder="نام زیرمجموعه جدید (مثلا: فروشگاه سعادت‌آباد / انبار پارچه...)" style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--txt)"><button class="btn small" onclick="addSub(\''+k+'\')">+ افزودن زیرمجموعه</button></div>';
+ else h+='<div class="muted">🔒 ثبت نهایی شده — ویرایش فقط با مجوز ادمین</div>';
+ return h+'</div>';
+}
+function addSub(k){const v=document.getElementById('newSub').value.trim();if(!v){toast('نام زیرمجموعه را بنویسید');return}DB.units[k].subs.push({name:v,staff:[],op:[],nonop:[]});DB.units[k].lastEdit=nowISO();save();render()}
+function delSub(k,i){if(!confirm('حذف شود؟'))return;DB.units[k].subs.splice(i,1);save();render()}
+function addStaff(k,i){const pos=document.getElementById('np'+i).value,n=document.getElementById('nn'+i).value,sal=num(document.getElementById('ns'+i).value);if(!pos)return toast('پوزیشن لازم است');DB.units[k].subs[i].staff.push({pos:pos,n:n||1,sal:sal});DB.units[k].lastEdit=nowISO();save();render()}
+function delStaff(k,i,j){DB.units[k].subs[i].staff.splice(j,1);save();render()}
+function addCost(k,i,kind){const t=document.getElementById(kind==='op'?'op'+i:'no'+i).value,a=num(document.getElementById(kind==='op'?'opa'+i:'noa'+i).value);if(!t)return toast('شرح لازم است');DB.units[k].subs[i][kind].push({t:t,a:a});DB.units[k].lastEdit=nowISO();save();render()}
+function delCost(k,i,kind,j){DB.units[k].subs[i][kind].splice(j,1);save();render()}
+// ============ SPEC FORMS ============
+function viewSpec(k){
+ if(k==='tolid')return specTolid();if(k==='forosh')return specForosh();if(k==='tamin')return specTamin();
+ return '<div class="card"><h3>🎯 فرم تخصصی '+UNIT_NAMES[k]+'</h3><div class="muted">برای این واحد فرم تخصصی جدا تعریف نشده؛ از جداول و زیرمجموعه‌ها استفاده کنید. واحدهای تولید، فروش و تامین فرم اختصاصی دارند.</div><div style="margin-top:10px"><button class="btn small" onclick="go(\'mytable\')">رفتن به جداول</button></div></div>'+viewSub(k);
+}
+function specTolid(){
+ return '<div class="card"><h3>🏭 فرم تخصصی تولید — کارگروه / تولید ماهانه / برش / SS و FW</h3><div class="muted">بلوز، شلوار، مانتو، پیراهن... — تولید ماهانه به تفکیک کارگروه و جمع سالانه + برش (تعداد مدل و تیکه) — همه قابل تفکیک SS و FW</div><div class="tabs" style="margin-top:10px"><button class="tab active">تولید ماهانه</button><button class="tab" onclick="go(\'mytable\')">ویرایش در جدول اصلی</button><button class="tab" onclick="go(\'sub\')">زیرمجموعه‌ها (الگو، برش، بسته‌بندی...)</button></div><div class="muted">💡 جدول «تولید ماهانه به تفکیک کارگروه» را در تب جداول کامل کنید (۱۲ ماه + جمع سالانه). الگوی پیشنهادی کارگروه‌ها:</div><div class="grid4" style="margin-top:10px">'+['بلوز','شلوار','مانتو','پیراهن'].map(g=>'<div class="kpi"><small>کارگروه '+g+'</small><b style="font-size:14px">SS / FW</b><div class="muted">ماهانه + سالانه</div></div>').join('')+'</div></div>'
+ +'<div class="card"><h3>✂️ برش — تعداد مدل‌ها و تیکه بر اساس کارگروه (ماهانه)</h3><div class="toolbar"><button class="btn small ghost" onclick="go(\'mytable\')">باز کردن جدول‌ساز</button><button class="btn small" onclick="addTable()">+ ساخت جدول برش</button></div><div class="muted">پیشنهاد ستون‌ها: ماه | کالکشن | کارگروه | تعداد مدل | تعداد تیکه | ضایعات % | توضیحات</div></div>'+viewSub('tolid');
+}
+function specForosh(){
+ return '<div class="card"><h3>🛍️ فرم تخصصی فروش — فروشگاه‌ها / پرسنل / فروش کارگروه / تخفیف و پروموشن</h3><div class="muted">زیرمجموعه = فروشگاه‌ها (به تفکیک) • تعداد و پوزیشن پرسنل هر فروشگاه • هزینه عملیاتی/غیرعملیاتی هر فروشگاه • تعداد فروش هر کارگروه • تخفیف و پروموشن ماهانه • تفکیک سرژه (خرده) و گردیه (عمده) و SS / FW</div><div class="grid2" style="margin-top:10px"><div class="kpi"><small>برند سرژه</small><b style="font-size:15px">خرده‌فروشی 🛍️</b><div class="muted">فروشگاه‌های سطح شهر</div></div><div class="kpi"><small>برند گردیه</small><b style="font-size:15px">عمده‌فروشی 📦</b><div class="muted">فروش عمده + شعب عمده</div></div></div></div>'+viewSub('forosh');
+}
+function specTamin(){
+ return '<div class="card"><h3>📦 فرم تخصصی تامین — متراژ و مبلغ تولید ۱۴۰۶</h3><div class="muted">برای تولید طی دوره: هم متراژ (متر) و هم مبلغ (ریال) برآورد شود • به تفکیک SS و FW و کارگروه</div><div class="muted" style="margin-top:6px">ستون پیشنهادی جدول: کالکشن | کارگروه | متراژ | مبلغ | تامین‌کننده | ماه تحویل</div><div style="margin-top:8px"><button class="btn small" onclick="go(\'mytable\')">تکمیل در جدول‌ساز</button></div></div>'+viewSub('tamin');
+}
+// ============ ANNOUNCEMENTS ============
+function viewAnn(){
+ let h='<div class="card"><h3>📢 اطلاع‌رسانی و تایم‌لاین بودجه</h3><div class="muted">آخرین اطلاعیه ادمین برای واحدها + تایم‌لاین ارائه دیتا • به محض مشاهده توسط واحد، تاریخ و ساعت در مانیتورینگ ادمین ثبت می‌شود.</div>';
+ if(isAdmin())h+='<div class="grid2" style="margin-top:12px"><div class="field"><label>عنوان اطلاعیه جدید</label><input id="annT" placeholder="مثلا: ددلاین ثبت نهایی ۱۵ آذر"></div><div class="field"><label>متن اطلاعیه</label><input id="annB" placeholder="متن کامل اطلاعیه..."></div></div><button class="btn small" onclick="sendAnn()">📤 ارسال به همه واحدها</button>';
+ h+='</div><div class="grid2"><div class="card"><h3>📜 اطلاعیه‌ها</h3>';
+ [...DB.ann].reverse().forEach(a=>{
+  const seen=isAdmin()?UNITS.map(u=>{const r=(DB.reads[u]||{})[a.id];return '<div style="font-size:11.5px">• '+UNIT_NAMES[u]+': '+(r?'<span class="status-ok">👁️ '+nowFa(r)+'</span>':'<span class="status-wait">ندیده ❌</span>')+'</div>'}).join(''):'';
+  h+='<div class="tl-item"><b>'+a.title+'</b><div style="font-size:13px;line-height:2;margin-top:4px">'+a.text+'</div><div class="muted" style="margin-top:6px">📅 '+nowFa(a.date)+' • '+a.by+'</div>'+(isAdmin()?'<div style="margin-top:8px;background:#00000022;border-radius:10px;padding:8px">'+seen+'</div>':'<button class="btn small ok" style="margin-top:8px" onclick="readAnn(\''+a.id+'\')">👁️ خواندم / ثبت مشاهده</button>')+'</div>';
+ });
+ h+='</div><div class="card"><h3>⏱️ تایم‌لاین ارائه دیتاها</h3><div class="timeline">'+DB.timeline.map((t,i)=>'<div class="tl-item"><b>'+t.t+'</b><div class="muted">'+t.d+'</div>'+(isAdmin()?'<button class="btn small ghost" style="margin-top:6px" onclick="delTl('+i+')">حذف</button>':'')+'</div>').join('')+'</div>';
+ if(isAdmin())h+='<div style="display:flex;gap:8px;margin-top:10px"><input id="tlT" placeholder="عنوان (مثلا: ۲۰ آذر — جلسه جمع‌بندی)" style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--txt)"><input id="tlD" placeholder="توضیح" style="flex:1;padding:10px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--txt)"><button class="btn small" onclick="addTl()">+ افزودن</button></div>';
+ h+='</div></div>';return h;
+}
+function sendAnn(){const t=document.getElementById('annT').value.trim(),b=document.getElementById('annB').value.trim();if(!t||!b)return toast('عنوان و متن لازم است');DB.ann.push({id:'a'+Date.now(),title:t,text:b,date:nowISO(),by:'امیر محمدی (ادمین)'});save();toast('📢 اطلاعیه ارسال شد');render()}
+function readAnn(id){const k=isAdmin()?'admin':myUnit();if(!DB.reads[k])DB.reads[k]={};DB.reads[k][id]=nowISO();save();toast('👁️ مشاهده ثبت شد — '+nowStr());render()}
+function addTl(){const t=document.getElementById('tlT').value,d=document.getElementById('tlD').value;if(!t)return;DB.timeline.push({t:t,d:d});save();render()}
+function delTl(i){DB.timeline.splice(i,1);save();render()}
+// ============ MESSAGES ============
+function viewMsg(){
+ const me=isAdmin()?'admin':myUnit();
+ const inbox=DB.msgs.filter(m=>m.to===me),sent=DB.msgs.filter(m=>m.from===me);
+ let h='<div class="card"><h3>💬 تعاملات واحدها — صندوق ارسالی / دریافتی + فایل</h3><div class="muted">ارسال پیام و فایل بین واحدها • درج تاریخ و ساعت مشاهده مبدأ و مقصد • پس از مشاهده، پیام قابل ویرایش نیست • ذخیره در همین پنل (و بکاپ GitHub)</div>';
+ h+='<div class="grid2" style="margin-top:12px"><div class="field"><label>مقصد</label><select id="mTo">'+(isAdmin()?UNITS.map(u=>'<option value="'+u+'">'+UNIT_NAMES[u]+'</option>').join(''):'<option value="admin">👑 ادمین (امیر محمدی)</option>'+UNITS.filter(u=>u!==me).map(u=>'<option value="'+u+'">'+UNIT_NAMES[u]+'</option>').join(''))+'</select></div><div class="field"><label>موضوع</label><input id="mSub" placeholder="موضوع پیام..."></div></div><div class="field"><label>متن پیام</label><textarea id="mTx" rows="3" placeholder="متن پیام به واحد مقصد..."></textarea></div><div class="field"><label>فایل ضمیمه (اختیاری)</label><input type="file" id="mFile"></div><button class="btn small" onclick="sendMsg()">📤 ارسال پیام</button></div>';
+ h+='<div class="grid2"><div class="card"><h3>📥 دریافتی ('+en2fa(inbox.length)+')</h3>';
+ if(!inbox.length)h+='<div class="muted">پیامی ندارید 🎉</div>';
+ [...inbox].reverse().forEach(m=>{h+='<div class="msg '+(m.readAt?'':'unread')+'"><b>'+m.sub+'</b><div style="font-size:12.5px;line-height:2">'+m.tx+'</div><div class="muted">از: '+(m.from==='admin'?'ادمین 👑':UNIT_NAMES[m.from])+' • 📅 '+nowFa(m.date)+(m.fname?' • 📎 '+m.fname:'')+'</div>'+(m.fname?'<button class="btn small ghost" onclick="dlMsg(\''+m.id+'\')">⬇️ دانلود فایل</button>':'')+'<div style="font-size:12px;margin-top:4px">'+(m.readAt?'👁️ مشاهده: '+nowFa(m.readAt)+' • 🔒 قفل ویرایش':'<button class="btn small ok" onclick="readMsg(\''+m.id+'\')">👁️ ثبت مشاهده</button>')+'</div></div>'});
+ h+='</div><div class="card"><h3>📤 ارسالی ('+en2fa(sent.length)+')</h3>';
+ if(!sent.length)h+='<div class="muted">هنوز پیامی نفرستاده‌اید.</div>';
+ [...sent].reverse().forEach(m=>{h+='<div class="msg"><b>'+m.sub+'</b><div style="font-size:12.5px">'+m.tx+'</div><div class="muted">به: '+(m.to==='admin'?'ادمین 👑':UNIT_NAMES[m.to])+' • 📅 '+nowFa(m.date)+'</div><div style="font-size:12px">'+(m.readAt?'👁️ دیده شده: '+nowFa(m.readAt):'⏳ دیده نشده')+'</div>'+(!m.readAt?'<button class="btn small warn" onclick="delMsg(\''+m.id+'\')">حذف (قبل از مشاهده)</button>':'<span class="muted" style="font-size:11px">🔒 پس از مشاهده قابل ویرایش/حذف نیست</span>')+'</div>'});
+ h+='</div></div>';return h;
+}
+function sendMsg(){const to=document.getElementById('mTo').value,sub=document.getElementById('mSub').value||'بدون موضوع',tx=document.getElementById('mTx').value||'';const f=document.getElementById('mFile').files[0];const from=isAdmin()?'admin':myUnit();
+ const push=(fname,fdata)=>{DB.msgs.push({id:'m'+Date.now(),from:from,to:to,sub:sub,tx:tx,fname:fname||'',fdata:fdata||'',date:nowISO(),readAt:null});save();toast('📤 ارسال شد');render()};
+ if(f){if(f.size>1500000)return toast('حجم فایل حداکثر ۱.۵ مگ (محدودیت مرورگر)');const r=new FileReader();r.onload=()=>push(f.name,r.result);r.readAsDataURL(f)}else push('','');
+}
+function readMsg(id){const m=DB.msgs.find(x=>x.id===id);m.readAt=nowISO();save();toast('👁️ مشاهده ثبت شد');render()}
+function delMsg(id){DB.msgs=DB.msgs.filter(x=>x.id!==id);save();render()}
+function dlMsg(id){const m=DB.msgs.find(x=>x.id===id);if(!m.fdata)return;const a=document.createElement('a');a.href=m.fdata;a.download=m.fname;a.click()}
+// ============ MONITOR ============
+function viewMonitor(){
+ let rows=UNITS.map(k=>{const u=DB.units[k];const reads=DB.ann.map(a=>{const r=(DB.reads[k]||{})[a.id];return r?'✅':'❌'}).join(' ');return '<tr><td><b>'+UNIT_NAMES[k]+'</b></td><td>'+(u.lastEdit?nowFa(u.lastEdit):'—')+'</td><td>'+(u.final?'<span class="status-ok">✅ '+nowFa(u.final.date)+'</span>':'<span class="status-wait">⏳ نهایی نشده</span>')+'</td><td style="font-size:12px">'+reads+'<br><small class="muted">'+en2fa(Object.keys(DB.reads[k]||{}).length)+' از '+en2fa(DB.ann.length)+' اطلاعیه</small></td><td>'+u.tables.length+' جدول<br>'+u.subs.length+' زیرمجموعه</td><td><button class="btn small" onclick="go(\'unit:'+k+'\')">ورود ↗</button> '+(u.final?'<button class="btn small warn" onclick="unlockUnit(\''+k+'\')">🔓 بازکردن</button>':'<button class="btn small ok" onclick="adminFinal(\''+k+'\')">✅ تایید نهایی</button>')+'</td></tr>'}).join('');
+ return '<div class="card"><h3>📊 مانیتورینگ — فقط ادمین 👑</h3><div class="muted">آخرین تاریخ و ساعت ویرایش + ثبت نهایی هر واحد + وضعیت مشاهده اطلاعیه‌ها + دسترسی ویرایش بعد از تایید نهایی (فقط شما)</div><div style="overflow:auto;margin-top:12px"><table class="tbl"><tr><th>واحد</th><th>آخرین ویرایش</th><th>ثبت نهایی</th><th>مشاهده اطلاعیه‌ها</th><th>حجم دیتا</th><th>عملیات</th></tr>'+rows+'</table></div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn small" onclick="exportAll()">📤 اکسپورت کل (اکسل)</button><button class="btn small ghost" onclick="backupJSON()">💾 بکاپ JSON</button><button class="btn small pink" onclick="go(\'report\')">📈 گزارش سود</button></div></div>'
+ +'<div class="card"><h3>💬 وضعیت تعاملات</h3><div style="overflow:auto"><table class="tbl"><tr><th>از</th><th>به</th><th>موضوع</th><th>ارسال</th><th>مشاهده</th></tr>'+DB.msgs.slice(-12).reverse().map(m=>'<tr><td>'+(UNIT_NAMES[m.from]||'ادمین')+'</td><td>'+(UNIT_NAMES[m.to]||'ادمین')+'</td><td>'+m.sub+'</td><td>'+nowFa(m.date)+'</td><td>'+(m.readAt?nowFa(m.readAt):'⏳')+'</td></tr>').join('')+'</table></div></div>';
+}
+function adminFinal(k){if(!confirm('تایید نهایی '+UNIT_NAMES[k]+'؟'))return;DB.units[k].final={date:nowISO(),by:'admin'};save();render()}
+// ============ CALC (admin only) ============
+function unitTotal(k){const u=DB.units[k];let s=0;u.subs.forEach(x=>{s+=x.staff.reduce((a,p)=>a+num(p.n)*num(p.sal),0)+x.op.reduce((a,p)=>a+num(p.a),0)+x.nonop.reduce((a,p)=>a+num(p.a),0)});return s}
+function viewCalc(){
+ if(!isAdmin())return '<div class="card">⛔ فقط ادمین دسترسی دارد.</div>';
+ const c=DB.calc;const groups=[['بلوز',42000],['شلوار',38000],['مانتو',25000],['پیراهن',18000]];
+ const mat=c.mat||0;let rows=groups.map(g=>{const share=g[1]/123000;const m=Math.round(mat*share);return '<tr><td>'+g[0]+'</td><td>'+fa(g[1])+'</td><td>'+fa(m)+'</td><td>'+fa(Math.round(m/g[1]))+' ریال/واحد</td></tr>'}).join('');
+ const prodCost=mat+num(c.extra);const avail=prodCost+num(c.wip1)-num(c.wip2);const cogs=avail+num(c.fg1)-num(c.fg2);
+ return '<div class="card"><h3>🧮 محاسبات بهای تمام‌شده — فقط ادمین 👑</h3><div class="muted">بهای مواد مصرفی + دستمزد و سربار هر واحد تولیدی به تفکیک کارگروه → بهای تولید طی دوره → موجودی در جریان اول/پایان → کالای ساخته‌شده اول/پایان → بهای تمام‌شده کالای فروش‌رفته</div>'
+ +'<div class="grid2" style="margin-top:12px"><div><div class="field"><label>بهای مواد اولیه مصرفی (ریال) — از تامین</label><input type="text" id="c_mat" value="'+(c.mat||'')+'" oninput="calcIn(\'mat\',this.value)" placeholder="مثلا 45000000000"></div><div class="field"><label>دستمزد + سربار تولید (ریال) — تجمیع زیرمجموعه‌های تولید</label><input type="text" value="'+fa(unitTotal('tolid'))+'" disabled></div><button class="btn small" onclick="pullTolid()">⬇️ فراخوانی خودکار از واحد تولید</button><div class="field" style="margin-top:8px"><label>سایر سربار جذب‌شده (ریال)</label><input id="c_extra" value="'+(c.extra||'')+'" oninput="calcIn(\'extra\',this.value)"></div></div>'
+ +'<div><div class="field"><label>موجودی در جریان اول دوره (ریال)</label><input id="c_wip1" value="'+(c.wip1||'')+'" oninput="calcIn(\'wip1\',this.value)"></div><div class="field"><label>در جریان پایان دوره (ریال)</label><input id="c_wip2" value="'+(c.wip2||'')+'" oninput="calcIn(\'wip2\',this.value)"></div><div class="field"><label>کالای ساخته‌شده اول دوره (ریال)</label><input id="c_fg1" value="'+(c.fg1||'')+'" oninput="calcIn(\'fg1\',this.value)"></div><div class="field"><label>کالای ساخته‌شده پایان دوره (ریال)</label><input id="c_fg2" value="'+(c.fg2||'')+'" oninput="calcIn(\'fg2\',this.value)"></div></div></div>'
+ +'<div class="grid4" style="margin-top:12px"><div class="kpi"><small>بهای تولید طی دوره</small><b>'+fa(prodCost)+'</b></div><div class="kpi"><small>بهای کالای آماده فروش</small><b>'+fa(avail)+'</b></div><div class="kpi ok"><small>بهای تمام‌شده (COGS)</small><b>'+fa(cogs)+'</b></div><div class="kpi"><small>معادل دلاری COGS</small><b>$'+fa(Math.round(cogs/DB.fx.usd))+'</b></div></div>'
+ +'<h3 style="margin-top:14px">📊 تسهیم به تفکیک کارگروه</h3><div style="overflow:auto"><table class="tbl"><tr><th>کارگروه</th><th>تعداد تولید سالانه</th><th>سهم بهای تولید (ریال)</th><th>بهای واحد</th></tr>'+rows+'</table></div>'
+ +'<div style="height:240px;margin-top:12px"><canvas id="chCalc"></canvas></div><script>drawCalc('+prodCost+','+num(c.wip1)+','+num(c.wip2)+','+num(c.fg1)+','+num(c.fg2)+')<\/script></div>';
+}
+function calcIn(k,v){DB.calc[k]=num(v);save();const keep=PAGE;renderKeep()}
+function renderKeep(){const c=document.getElementById('content');const pos=window.scrollY;render();window.scrollTo(0,pos)}
+function pullTolid(){DB.calc.mat=DB.calc.mat||0;DB.calc.extra=unitTotal('tolid');save();render();toast('⬇️ سربار تولید فراخوانی شد: '+fa(DB.calc.extra))}
+// ============ REPORT ============
+function viewReport(){
+ if(!isAdmin())return '<div class="card">⛔ فقط ادمین</div>';
+ const c=DB.calc;const cogs=(num(c.mat)+num(c.extra))+num(c.wip1)-num(c.wip2)+num(c.fg1)-num(c.fg2);
+ const salesS=85000000000,salesG=62000000000,disc=7000000000;
+ const netS=salesS-disc*0.6,netG=salesG-disc*0.4;const cogsS=Math.round(cogs*0.58),cogsG=cogs-cogsS;
+ const pS=netS-cogsS,pG=netG-cogsG,pt=pS+pG;
+ const usd=r=>Math.round(r/DB.fx.usd);
+ return '<div class="card"><h3>📈 سود و زیان ۱۴۰۶ — سرژه (خرده) / گردیه (عمده) / تلفیقی + SS و FW</h3><div class="muted">با احتساب هزینه‌های هر واحد + بهای تمام‌شده • گزارش ریالی و دلاری • قابل ارائه به هیئت‌مدیره در قالب کتابچه بودجه</div>'
+ +'<div class="grid3" style="margin-top:12px"><div class="kpi ok"><small>سود سرژه (خرده‌فروشی)</small><b>'+fa(pS)+'</b><small>≈ $'+fa(usd(pS))+'</small></div><div class="kpi ok"><small>سود گردیه (عمده‌فروشی)</small><b>'+fa(pG)+'</b><small>≈ $'+fa(usd(pG))+'</small></div><div class="kpi"><small>سود تلفیقی</small><b>'+fa(pt)+'</b><small>≈ $'+fa(usd(pt))+'</small></div></div>'
+ +'<div style="overflow:auto;margin-top:12px"><table class="tbl"><tr><th>شرح</th><th>سرژه خرده (ریال)</th><th>گردیه عمده (ریال)</th><th>تلفیقی (ریال)</th><th>تلفیقی ($)</th></tr>'
+ +'<tr><td>فروش ناخالص</td><td>'+fa(salesS)+'</td><td>'+fa(salesG)+'</td><td>'+fa(salesS+salesG)+'</td><td>$'+fa(usd(salesS+salesG))+'</td></tr>'
+ +'<tr><td>تخفیف و پروموشن</td><td>('+fa(disc*0.6)+')</td><td>('+fa(disc*0.4)+')</td><td>('+fa(disc)+')</td><td>($'+fa(usd(disc))+')</td></tr>'
+ +'<tr><td>فروش خالص</td><td>'+fa(netS)+'</td><td>'+fa(netG)+'</td><td>'+fa(netS+netG)+'</td><td>$'+fa(usd(netS+netG))+'</td></tr>'
+ +'<tr><td>بهای تمام‌شده</td><td>('+fa(cogsS)+')</td><td>('+fa(cogsG)+')</td><td>('+fa(cogs)+')</td><td>($'+fa(usd(cogs))+')</td></tr>'
+ +'<tr style="background:#10b98133;font-weight:800"><td>سود ناخالص</td><td>'+fa(pS)+'</td><td>'+fa(pG)+'</td><td>'+fa(pt)+'</td><td>$'+fa(usd(pt))+'</td></tr>'
+ +'<tr><td>هزینه مارکتینگ</td><td colspan="2" style="text-align:center">'+fa(unitTotal('mark'))+'</td><td>('+fa(unitTotal('mark'))+')</td><td>($'+fa(usd(unitTotal('mark')))+')</td></tr>'
+ +'<tr><td>هزینه مالی / منابع انسانی</td><td colspan="2" style="text-align:center">'+fa(unitTotal('mali')+unitTotal('hr'))+'</td><td>('+fa(unitTotal('mali')+unitTotal('hr'))+')</td><td>($'+fa(usd(unitTotal('mali')+unitTotal('hr')))+')</td></tr>'
+ +'</table></div>'
+ +'<div class="grid2" style="margin-top:12px"><div style="height:260px"><canvas id="chRep"></canvas></div><div class="card"><h3>📚 کالکشن‌ها</h3><div class="muted">SS بهار/تابستان: ۵۸٪ فروش • FW پاییز/زمستان: ۴۲٪ فروش (قابل ویرایش در جداول تولید و فروش)</div><div class="progress" style="margin-top:10px"><i style="width:58%"></i></div><div class="muted">SS ٪۵۸ • FW ٪۴۲</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" onclick="exportAll()">📤 خروجی اکسل هیئت‌مدیره</button><button class="btn small ghost" onclick="window.print()">🖨️ چاپ کتابچه</button></div></div></div><script>drawRep('+pS+','+pG+')<\/script></div>';
+}
+// ============ FX ============
+function viewFx(){
+ if(!isAdmin())return '<div class="card">⛔ فقط ادمین</div>';
+ return '<div class="card"><h3>💱 ارز، تورم و تعدیل بودجه</h3><div class="muted">نرخ دلار و تورم را به‌روز کنید؛ همه گزارش‌ها (ریالی + دلاری) و نرخ جذب واحدها و بهای واحد فروش خودکار تعدیل می‌شوند.</div><div class="grid3" style="margin-top:12px"><div class="field"><label>نرخ دلار (ریال)</label><input id="fxU" value="'+DB.fx.usd+'" oninput="fxIn()"></div><div class="field"><label>تورم سالانه (٪)</label><input id="fxI" type="number" value="'+DB.fx.inflation+'" oninput="fxIn()"></div><div class="field"><label>رشد فروش هدف (٪)</label><input id="fxG" type="number" value="'+DB.fx.growth+'" oninput="fxIn()"></div></div>'
+ +'<div class="grid3" style="margin-top:10px"><div class="kpi"><small>ضریب تعدیل تورمی</small><b>× '+((1+DB.fx.inflation/100).toFixed(2))+'</b></div><div class="kpi"><small>بودجه تعدیل‌شده (تخمینی)</small><b>'+fa(Math.round((unitTotal('mali')+unitTotal('tolid')+unitTotal('forosh')+unitTotal('mark')+unitTotal('hr'))*(1+DB.fx.inflation/100)))+'</b></div><div class="kpi"><small>معادل دلاری کل هزینه‌ها</small><b>$'+fa(Math.round((unitTotal('mali')+unitTotal('tolid')+unitTotal('forosh')+unitTotal('mark')+unitTotal('hr')+unitTotal('tamin'))/DB.fx.usd))+'</b></div></div>'
+ +'<div class="muted" style="margin-top:8px">💡 مثال: اگر دلار از ۱٬۱۵۰٬۰۰۰ به ۱٬۴۰۰٬۰۰۰ برود، بهای واحد فروش هر کارگروه ≈ '+en2fa(22)+'٪ رشد می‌کند تا حاشیه سود حفظ شود. این پنل نرخ جذب را پیشنهاد می‌دهد.</div></div>';
+}
+function fxIn(){DB.fx.usd=num(document.getElementById('fxU').value)||DB.fx.usd;DB.fx.inflation=parseFloat(document.getElementById('fxI').value)||0;DB.fx.growth=parseFloat(document.getElementById('fxG').value)||0;save();document.getElementById('fxChip').textContent='💵 دلار: '+fa(DB.fx.usd)+' ریال • تورم '+en2fa(DB.fx.inflation)+'%'}
+// ============ GITHUB ============
+function viewGh(){
+ const g=DB.gh;
+ return '<div class="card"><h3>☁️ ذخیره‌سازی رایگان در GitHub</h3><div class="muted">دیتای پنل (جداول، پیام‌ها، اطلاعیه‌ها، محاسبات) به‌صورت JSON در ریپوی GitHub شما ذخیره می‌شود. کافیست یک توکن + ریپو بسازید. همه‌چیز همزمان در مرورگر (localStorage) هم هست.<br>مراحل: github.com → New repository (مثلا serge-budget) → Settings → Developer settings → Personal access tokens → repo ✅ → اینجا وارد کنید.</div>'
+ +'<div class="grid2" style="margin-top:12px"><div class="field"><label>Token (ghp_...)</label><input id="gT" type="password" value="'+g.token+'" placeholder="ghp_xxxx"></div><div class="field"><label>Owner (نام کاربری گیت‌هاب)</label><input id="gO" value="'+g.owner+'" placeholder="amir-mohammadi"></div><div class="field"><label>Repo</label><input id="gR" value="'+g.repo+'" placeholder="serge-budget"></div><div class="field"><label>Path / Branch</label><input id="gP" value="'+g.path+'"><div class="muted">Branch: main</div></div></div>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" onclick="ghSaveCfg()">💾 ذخیره تنظیمات</button><button class="btn small ok" onclick="ghPush()">☁️ آپلود در GitHub</button><button class="btn small ghost" onclick="ghPull()">⬇️ دانلود از GitHub</button><button class="btn small pink" onclick="backupJSON()">💾 بکاپ JSON</button></div><div class="muted" id="ghMsg" style="margin-top:8px"></div></div>';
+}
+function ghSaveCfg(){DB.gh={token:document.getElementById('gT').value.trim(),owner:document.getElementById('gO').value.trim(),repo:document.getElementById('gR').value.trim(),path:document.getElementById('gP').value.trim()||'serge-budget-1406.json',branch:'main'};save();toast('تنظیمات GitHub ذخیره شد')}
+async function ghPush(){ghSaveCfg();const g=DB.gh;if(!g.token||!g.owner||!g.repo)return toast('توکن/owner/repo لازم است');const msg=document.getElementById('ghMsg');msg.textContent='⏳ در حال آپلود...';try{
+ const url='https://api.github.com/repos/'+g.owner+'/'+g.repo+'/contents/'+encodeURIComponent(g.path);
+ let sha=null;const r0=await fetch(url,{headers:{Authorization:'Bearer '+g.token,Accept:'application/vnd.github+json'}});if(r0.ok){const j=await r0.json();sha=j.sha}
+ const content=btoa(unescape(encodeURIComponent(JSON.stringify(DB,null,2))));
+ const r1=await fetch(url,{method:'PUT',headers:{Authorization:'Bearer '+g.token,'Content-Type':'application/json'},body:JSON.stringify({message:'budget update '+new Date().toISOString(),content:content,branch:'main',sha:sha})});
+ if(!r1.ok)throw new Error(await r1.text());msg.textContent='✅ آپلود شد! همه واحدها با pull به‌روز می‌شوند.';toast('☁️ در GitHub ذخیره شد')}catch(e){msg.textContent='❌ خطا: '+String(e).slice(0,300)}} 
+async function ghPull(){const g=DB.gh;if(!g.owner||!g.repo)return toast('owner/repo لازم است');const msg=document.getElementById('ghMsg');msg.textContent='⏳...';try{const url='https://api.github.com/repos/'+g.owner+'/'+g.repo+'/contents/'+encodeURIComponent(g.path)+'?ref=main';const h={Accept:'application/vnd.github.raw'};if(g.token)h.Authorization='Bearer '+g.token;const r=await fetch(url,{headers:h});if(!r.ok)throw new Error('یافت نشد');const j=await r.json();DB=j;save();render();msg.textContent='✅ دانلود و اعمال شد';toast('⬇️ از GitHub خوانده شد')}catch(e){msg.textContent='❌ '+String(e).slice(0,300)}}
+// ============ EXCEL ============
+function sheetToAOA(t){return t.data.map(r=>r.map(c=>{const n=num(c.v);return (c.v!==''&&!isNaN(n)&&String(c.v).trim()!==''&&/^[0-9٬,۰-۹\s]+$/.test(String(c.v)))?n:c.v}))}
+function exportTable(){const k=curUnitKey(),t=DB.units[k].tables[SEL_TABLE];const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sheetToAOA(t)),t.title.slice(0,28));XLSX.writeFile(wb,'Serge1406-'+k+'-'+t.title+'.xlsx');toast('📤 اکسل دانلود شد')}
+function importTable(ev){const f=ev.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'array'});const ws=wb.Sheets[wb.SheetNames[0]];const aoa=XLSX.utils.sheet_to_json(ws,{header:1});const k=curUnitKey();DB.units[k].tables[SEL_TABLE].data=aoa.map(r=>r.map(v=>({...blankCell(String(v??''))})));DB.units[k].lastEdit=nowISO();save();render();toast('📥 ایمپورت شد ('+aoa.length+' ردیف)')}catch(err){toast('خطا در فایل')}};rd.readAsArrayBuffer(f)}
+function exportAll(){const wb=XLSX.utils.book_new();UNITS.forEach(k=>{DB.units[k].tables.forEach(t=>{XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sheetToAOA(t)),(k+'-'+t.title).slice(0,28))})});const sum=[['واحد','جمع هزینه (ریال)','معادل دلاری']];UNITS.forEach(k=>sum.push([UNIT_NAMES[k],unitTotal(k),Math.round(unitTotal(k)/DB.fx.usd)]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sum),'خلاصه');XLSX.writeFile(wb,'Serge-Budget-1406-ALL.xlsx');toast('📤 خروجی کامل هیئت‌مدیره دانلود شد')}
+function backupJSON(){const b=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='serge-budget-1406-backup.json';a.click();toast('💾 بکاپ گرفته شد')}
+// ============ CHARTS ============
+function drawDesk(){try{const el=document.getElementById('ch1');if(!el||typeof Chart==='undefined')return;new Chart(el,{type:'doughnut',data:{labels:['نهایی‌شده','در حال تکمیل'],datasets:[{data:[UNITS.filter(k=>DB.units[k].final).length,UNITS.filter(k=>!DB.units[k].final).length],backgroundColor:['#10b981','#f59e0b']}]},options:{plugins:{legend:{labels:{color:'#94a3b8'}}}}})}catch(e){}}
+function drawCalc(p,w1,w2,f1,f2){try{const el=document.getElementById('chCalc');if(!el||typeof Chart==='undefined')return;new Chart(el,{type:'bar',data:{labels:['تولید طی دوره','در جریان اول','در جریان پایان','ساخته اول','ساخته پایان'],datasets:[{data:[p,w1,-w2,f1,-f2],backgroundColor:['#8b5cf6','#06b6d4','#ec4899','#10b981','#f59e0b']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#94a3b8'}},y:{ticks:{color:'#94a3b8'}}}}})}catch(e){}}
+function drawRep(a,b){try{const el=document.getElementById('chRep');if(!el||typeof Chart==='undefined')return;new Chart(el,{type:'bar',data:{labels:['سرژه (خرده)','گردیه (عمده)'],datasets:[{label:'سود (میلیارد ریال)',data:[Math.round(a/1e9),Math.round(b/1e9)],backgroundColor:['#06b6d4','#ec4899']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#94a3b8'}}},scales:{x:{ticks:{color:'#94a3b8'}},y:{ticks:{color:'#94a3b8'}}}}})}catch(e){}}
+// ============ INIT ============
+load();renderPicks();
+document.getElementById('inPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+</script>
+<script>
+// ============ SERGE SECURE v3 — principled & hardened ============
+// Architecture: GitHub Pages (static host, HTTPS) + Supabase (live DB, RLS ON) + GitHub (versioned backup only)
+// Secrets: anon key = public by design (RLS protects). PAT = admin session only, never synced.
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+const CLOUD_KEY='serge_cloud_cfg_v1';
+let CLOUD={url:'',key:'',table:'panel_state',rowId:1,auto:true};
+try{const s=localStorage.getItem(CLOUD_KEY);if(s){const j=JSON.parse(s);CLOUD={...CLOUD,...j}}}catch(e){}
+let _cloudT=null, cloudBusy=false, lastLocalEdit=0, lastCloudPush=0, lastCloudPull=0;
+function saveLocalOnly(){try{localStorage.setItem(LSKEY,JSON.stringify(DB))}catch(e){}}
+try{
+ if(DB&&DB.gh&&DB.gh.token){
+  try{sessionStorage.setItem('serge_gh_pat_session',DB.gh.token)}catch(e){}
+  DB.gh.token=''; try{localStorage.setItem(LSKEY,JSON.stringify(DB))}catch(e){}
+ }
+}catch(e){}
+const _origSave3=save;
+save=function(){
+ try{
+  if(!DB._meta)DB._meta={version:1};
+  DB._meta.version=(parseInt(DB._meta.version)||1);
+  // version increments on explicit saves (cloud push handles concurrency)
+  DB._meta.updatedAt=nowISO();
+  DB._meta.by=(typeof ME!=='undefined'&&ME)?ME.unit:'system';
+ }catch(e){}
+ _origSave3(); lastLocalEdit=Date.now(); queueCloudPush();
+};
+function bumpVersion(){try{if(!DB._meta)DB._meta={version:1};DB._meta.version=(parseInt(DB._meta.version)||1)+1;}catch(e){}}
+function isCloudOn(){return CLOUD.url&&CLOUD.url.startsWith('https://')&&CLOUD.key&&CLOUD.key.length>20}
+function cloudHeaders(){return {'apikey':CLOUD.key,'Authorization':'Bearer '+CLOUD.key,'Content-Type':'application/json'}}
+function updateCloudChip(st){
+ const el=document.getElementById('cloudChip'); if(!el)return;
+ if(!isCloudOn()){el.textContent='☁️ حالت محلی (بدون سرور)';el.style.background='#64748b33';return}
+ if(st==='pushing'){el.textContent='☁️ در حال ارسال…';el.style.background='#f59e0b44'}
+ else if(st==='pulling'){el.textContent='☁️ در حال دریافت…';el.style.background='#06b6d444'}
+ else if(st==='error'){el.textContent='☁️ خطای اتصال ❌';el.style.background='#ef444444'}
+ else if(st==='local-saved'){el.textContent='☁️ ذخیره محلی ✓ • آماده ارسال';el.style.background='#8b5cf644'}
+ else{el.textContent='☁️ متصل به سرور ✅';el.style.background='#10b98144'}
+}
+function queueCloudPush(){updateCloudChip('local-saved');if(!isCloudOn()||!CLOUD.auto)return;clearTimeout(_cloudT);_cloudT=setTimeout(()=>cloudPush(true),2500)}
+async function cloudGetRemote(){
+ const base=CLOUD.url.replace(/\/$/,'');
+ const url=base+'/rest/v1/'+CLOUD.table+'?id=eq.'+CLOUD.rowId+'&select=data,version,updated_at,updated_by';
+ const r=await fetch(url,{headers:cloudHeaders()});
+ if(!r.ok)throw new Error('HTTP '+r.status);
+ const j=await r.json(); return j.length?j[0]:null;
+}
+async function cloudAppendHistory(note){
+ try{
+  if(!isCloudOn())return;
+  const base=CLOUD.url.replace(/\/$/,'');
+  await fetch(base+'/rest/v1/panel_history',{method:'POST',headers:cloudHeaders(),body:JSON.stringify({data:DB,saved_by:(DB._meta&&DB._meta.by)||'unknown',note:note||''})});
+ }catch(e){}
+}
+async function cloudPush(silent,force){
+ if(!isCloudOn()){if(!silent)toast('❌ اول https آدرس سوپابیس و کلید anon را وارد کن');return}
+ if(cloudBusy){if(!silent)toast('⏳ صبر کن…');return}
+ cloudBusy=true; updateCloudChip('pushing');
+ try{
+  const base=CLOUD.url.replace(/\/$/,'');
+  const remote=await cloudGetRemote().catch(()=>null);
+  const lv=(DB._meta&&parseInt(DB._meta.version))||1;
+  if(remote&&!force){
+   const rv=parseInt(remote.version)||1;
+   if(rv>lv){cloudBusy=false;updateCloudChip('online');if(!silent){if(confirm('روی سرور نسخه جدیدتر (v'+rv+') هست. اول دریافت شود؟'))cloudPull(false)}else{await cloudPull(true)}return}
+  }
+  bumpVersion();
+  const body={id:CLOUD.rowId,data:sanitizedDB(),version:DB._meta.version,updated_at:new Date().toISOString(),updated_by:(DB._meta&&DB._meta.by)||'admin'};
+  const url=base+'/rest/v1/'+CLOUD.table;
+  const r=await fetch(url,{method:'POST',headers:{...cloudHeaders(),'Prefer':'resolution=merge-duplicates'},body:JSON.stringify(body)});
+  if(!r.ok){const tx=await r.text();throw new Error(tx.slice(0,300))}
+  lastCloudPush=Date.now(); updateCloudChip('online');
+  cloudAppendHistory('push v'+DB._meta.version+' by '+body.updated_by);
+  if(!silent)toast('☁️ روی سرور ابری ذخیره شد ✅ (v'+DB._meta.version+')');
+  const m=document.getElementById('cloudMsg'); if(m)m.textContent='✅ آخرین آپلود: '+nowStr()+' • نسخه v'+DB._meta.version;
+ }catch(e){updateCloudChip('error');if(!silent)toast('❌ خطا: '+String(e.message||e).slice(0,250))}
+ cloudBusy=false;
+}
+async function cloudPull(silent){
+ if(!isCloudOn()){if(!silent)toast('❌ اتصال تنظیم نشده');return}
+ if(cloudBusy){if(!silent)toast('⏳ صبر کن…');return}
+ cloudBusy=true; updateCloudChip('pulling');
+ try{
+  const remote=await cloudGetRemote();
+  if(!remote){updateCloudChip('online');if(!silent)toast('⚠️ روی سرور رکوردی نیست — اول آپلود بزن');cloudBusy=false;return}
+  const rd=remote.data;
+  if(!rd||!rd.units)throw new Error('دیتای سرور معتبر نیست');
+  const rv=parseInt(remote.version)||1, lv=(DB._meta&&parseInt(DB._meta.version))||1;
+  if(silent&&(Date.now()-lastLocalEdit<8000)){cloudBusy=false;updateCloudChip('online');return}
+  if(silent&&rv<=lv){cloudBusy=false;updateCloudChip('online');return}
+  let ok=true;
+  if(!silent){ok=confirm('نسخه سرور (v'+rv+') جایگزین این دستگاه (v'+lv+') شود؟')}
+  if(ok){DB=rd;if(!DB._meta)DB._meta={};DB._meta.version=rv;DB._meta.updatedAt=remote.updated_at;DB._meta.by=remote.updated_by||'server';if(DB.gh)DB.gh.token='';saveLocalOnly();try{updateProg()}catch(e){}try{render()}catch(e){}toast('⬇️ از سرور خوانده شد ✅ (v'+rv+')')}
+  lastCloudPull=Date.now(); updateCloudChip('online');
+  const m=document.getElementById('cloudMsg'); if(m)m.textContent='✅ آخرین دریافت: '+nowStr();
+ }catch(e){updateCloudChip('error');if(!silent)toast('❌ خطا: '+String(e.message||e).slice(0,250))}
+ cloudBusy=false;
+}
+function sanitizedDB(){const c=JSON.parse(JSON.stringify(DB));if(c.gh)c.gh.token='';return c}
+function saveCloudCfg2(){
+ let u=(document.getElementById('cUrl')?.value||'').trim();
+ if(u&&!u.startsWith('https://')){toast('❌ آدرس باید با https:// شروع شود');return}
+ CLOUD.url=u;CLOUD.key=(document.getElementById('cKey')?.value||'').trim();
+ CLOUD.table=((document.getElementById('cTbl')?.value||'panel_state').trim()||'panel_state').replace(/[^a-zA-Z0-9_]/g,'')||'panel_state';
+ CLOUD.rowId=parseInt(document.getElementById('cRow')?.value||'1')||1;
+ CLOUD.auto=document.getElementById('cAuto')?.checked!==false;
+ localStorage.setItem(CLOUD_KEY,JSON.stringify(CLOUD)); updateCloudChip(); toast('💾 تنظیمات سرور ذخیره شد');
+}
+async function testCloud(){saveCloudCfg2();if(!isCloudOn()){toast('❌ آدرس https و کلید کامل نیست');return}toast('⏳ تست اتصال…');await cloudPull(false)}
+async function cloudHistory(){
+ if(!isCloudOn()){toast('❌ اتصال تنظیم نشده');return}
+ const m=document.getElementById('cloudMsg'); if(m)m.textContent='⏳ خواندن تاریخچه…';
+ try{
+  const base=CLOUD.url.replace(/\/$/,'');
+  const r=await fetch(base+'/rest/v1/panel_history?select=seq,saved_by,saved_at,note&order=seq.desc&limit=20',{headers:cloudHeaders()});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  const box=document.getElementById('histBox');
+  if(box){box.innerHTML=j.length?j.map(h=>'<div style="font-size:12px;border-bottom:1px solid var(--line);padding:6px 0">🔖 #'+h.seq+' • '+esc(h.saved_by)+' • '+esc(h.saved_at)+' • '+esc(h.note||'')+' <button class="btn small ghost" onclick="cloudRestore('+h.seq+')">بازیابی</button></div>').join(''):'<div class="muted">تاریخچه‌ای نیست</div>'}
+  if(m)m.textContent='✅ '+j.length+' نسخه آخر خوانده شد';
+ }catch(e){if(m)m.textContent='❌ '+String(e.message||e).slice(0,200)}
+}
+async function cloudRestore(seq){
+ if(!confirm('نسخه #'+seq+' بازیابی و جایگزین شود؟ (نسخه فعلی در تاریخچه می‌ماند)'))return;
+ try{
+  const base=CLOUD.url.replace(/\/$/,'');
+  const r=await fetch(base+'/rest/v1/panel_history?seq=eq.'+seq+'&select=data',{headers:cloudHeaders()});
+  const j=await r.json(); if(!j.length||!j[0].data.units)throw new Error('نسخه معتبر نیست');
+  DB=j[0].data; if(DB.gh)DB.gh.token=''; bumpVersion(); saveLocalOnly(); try{render()}catch(e){}
+  await cloudPush(true,true); toast('✅ بازیابی شد و روی سرور رفت');
+ }catch(e){toast('❌ '+String(e.message||e).slice(0,200))}
+}
+setInterval(async()=>{
+ if(!isCloudOn()||!CLOUD.auto)return; if(document.hidden)return;
+ if(typeof ME==='undefined'||!ME)return;
+ if(Date.now()-lastLocalEdit<10000)return; if(Date.now()-lastCloudPull<20000)return;
+ try{const rm=await cloudGetRemote(); if(!rm)return;
+  const rv=parseInt(rm.version)||1, lv=(DB._meta&&parseInt(DB._meta.version))||1;
+  if(rv>lv)await cloudPull(true);
+ }catch(e){}
+},20000);
+window.addEventListener('focus',()=>{if(isCloudOn()&&CLOUD.auto&&(Date.now()-lastCloudPull>30000))cloudPull(true)});
+setTimeout(()=>updateCloudChip(),800);
+// ---- Secure login hardening (override) ----
+const LOGIN_FAIL_KEY='serge_login_fail_v1'; const SESS_KEY='serge_sess_exp_v1';
+function pickUser(id){try{pick=id;const u=USERS.find(x=>x.id===id);document.getElementById('inUser').value=u.user;document.getElementById('inPass').value='';renderPicks();document.getElementById('inPass').focus()}catch(e){}}
+function loginLocked(){try{const j=JSON.parse(localStorage.getItem(LOGIN_FAIL_KEY)||'{"n":0,"until":0}');if(Date.now()<j.until)return Math.ceil((j.until-Date.now())/1000);return 0}catch(e){return 0}}
+function loginFail(){try{const j=JSON.parse(localStorage.getItem(LOGIN_FAIL_KEY)||'{"n":0,"until":0}');j.n=(j.n||0)+1;if(j.n>=5){j.until=Date.now()+120000;j.n=0;toast('🔒 ۵ تلاش ناموفق — ۲ دقیقه قفل شد')}localStorage.setItem(LOGIN_FAIL_KEY,JSON.stringify(j))}catch(e){}}
+function loginOk(){try{localStorage.removeItem(LOGIN_FAIL_KEY)}catch(e){}}
+doLogin=function(){
+ const lock=loginLocked(); if(lock>0){toast('🔒 قفل موقت: '+lock+' ثانیه دیگر تلاش کن');return}
+ const u=document.getElementById('inUser').value.trim(),p=document.getElementById('inPass').value;
+ const f=USERS.find(x=>x.user===u&&x.pass===p);
+ if(!f){loginFail();toast('❌ نام کاربری یا رمز اشتباه است');return}
+ loginOk(); ME=f;
+ try{localStorage.setItem(SESS_KEY,String(Date.now()+45*60*1000))}catch(e){}
+ document.getElementById('loginWrap').style.display='none';document.getElementById('app').style.display='block';
+ document.getElementById('roleChip').textContent=f.icon+' '+f.name;
+ document.getElementById('inPass').value='';
+ buildSide();go('desk');toast('خوش آمدید '+f.name+' ✨');
+};
+setInterval(()=>{try{const v=parseInt(localStorage.getItem(SESS_KEY)||'0');if(ME&&v&&Date.now()>v){alert('نشست ۴۵ دقیقه‌ای تمام شد — برای امنیت خارج شدی');location.reload()}}catch(e){}},30000);
+// ---- Secure sheet render (XSS-safe override) ----
+sheetHTML=function(t,locked){
+ let h='';
+ for(let r=0;r<t.data.length;r++){h+='<tr>';
+  for(let c=0;c<t.data[r].length;c++){const cell=t.data[r][c];const v=esc(cell.v??'');
+   const st='color:'+esc(cell.c)+';background:'+esc(cell.bg);
+   if(r===0)h+='<th contenteditable="'+(!locked)+'" oninput="cellIn('+r+','+c+',this)" onclick="selC('+r+','+c+',this)" style="'+st+'">'+v+'</th>';
+   else h+='<td onclick="selC('+r+','+c+',this)" style="background:'+esc(cell.bg)+'"><div contenteditable="'+(!locked)+'" oninput="cellIn('+r+','+c+',this)" onfocus="selC('+r+','+c+',this)" style="color:'+esc(cell.c)+';font-weight:'+(cell.b?'800':'400')+';font-size:'+parseInt(cell.s||13)+'px">'+v+'</div></td>';
+  }
+  h+='</tr>'}
+ return h;
+};
+// ---- Secure GitHub: token ONLY in admin sessionStorage, never in DB/cloud ----
+function ghToken(){try{return (sessionStorage.getItem('serge_gh_pat_session')||'').trim()}catch(e){return ''}}
+function ghSetToken(v){try{if(v)sessionStorage.setItem('serge_gh_pat_session',v);else sessionStorage.removeItem('serge_gh_pat_session')}catch(e){}}
+ghSaveCfg=function(){
+ const t=document.getElementById('gT').value.trim();
+ if(t)ghSetToken(t);
+ DB.gh={token:'',owner:document.getElementById('gO').value.trim(),repo:document.getElementById('gR').value.trim(),path:document.getElementById('gP').value.trim()||'serge-budget-1406.json',branch:'main'};
+ saveLocalOnly(); toast('💾 ذخیره شد (توکن فقط در همین مرورگر می‌ماند، در سرور ذخیره نمی‌شود)');
+ try{render()}catch(e){}
+};
+ghPush=function(){
+ ghSaveCfgSilent(); const tk=ghToken(),g=DB.gh;
+ if(!tk||!g.owner||!g.repo){toast('توکن (نشست) / owner / repo لازم است');return}
+ const msg=document.getElementById('ghMsg');msg.textContent='⏳ در حال آپلود امن…';
+ (async()=>{
+  try{
+   const url='https://api.github.com/repos/'+encodeURIComponent(g.owner)+'/'+encodeURIComponent(g.repo)+'/contents/'+encodeURIComponent(g.path);
+   let sha=null;
+   const r0=await fetch(url,{headers:{Authorization:'Bearer '+tk,Accept:'application/vnd.github+json'}});
+   if(r0.ok){const j=await r0.json();sha=j.sha}
+   const content=btoa(unescape(encodeURIComponent(JSON.stringify(sanitizedDB(),null,2))));
+   const r1=await fetch(url,{method:'PUT',headers:{Authorization:'Bearer '+tk,'Content-Type':'application/json'},body:JSON.stringify({message:'secure backup v'+((DB._meta&&DB._meta.version)||1)+' '+new Date().toISOString(),content:content,branch:'main',sha:sha})});
+   if(!r1.ok){const tx=await r1.text();if(r1.status===409)throw new Error('کانفلیکت (409) — اول Pull بزن بعد Push');throw new Error(tx.slice(0,300))}
+   msg.textContent='✅ بکاپ نسخه‌دار در GitHub ثبت شد (توکن فاش نشد)';toast('☁️ بکاپ امن ثبت شد');
+  }catch(e){msg.textContent='❌ '+String(e.message||e).slice(0,300)}
+ })();
+ function ghSaveCfgSilent(){DB.gh={token:'',owner:document.getElementById('gO').value.trim(),repo:document.getElementById('gR').value.trim(),path:document.getElementById('gP').value.trim()||'serge-budget-1406.json',branch:'main'};saveLocalOnly()}
+};
+ghPull=function(){
+ const g=DB.gh;const msg=document.getElementById('ghMsg');msg.textContent='⏳...';
+ (async()=>{
+  try{
+   const url='https://api.github.com/repos/'+encodeURIComponent(g.owner)+'/'+encodeURIComponent(g.repo)+'/contents/'+encodeURIComponent(g.path)+'?ref=main';
+   const h={Accept:'application/vnd.github.raw'};const tk=ghToken();if(tk)h.Authorization='Bearer '+tk;
+   const r=await fetch(url,{headers:h});if(!r.ok)throw new Error('یافت نشد (ریپو باید Public یا توکن معتبر باشد)');
+   const j=await r.json(); if(!j.units)throw new Error('فایل معتبر نیست');
+   if(!confirm('بکاپ گیت‌هاب جایگزین شود؟')){msg.textContent='لغو شد';return}
+   DB=j;DB.gh.token='';DB.gh.owner=g.owner;DB.gh.repo=g.repo;saveLocalOnly();try{render()}catch(e){}
+   msg.textContent='✅ دانلود و اعمال شد';toast('⬇️ از GitHub خوانده شد');
+  }catch(e){msg.textContent='❌ '+String(e.message||e).slice(0,300)}
+ })();
+};
+backupJSON=function(){
+ const c=sanitizedDB();
+ const b=new Blob([JSON.stringify(c,null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='serge-budget-1406-backup-v'+((DB._meta&&DB._meta.version)||1)+'.json';a.click();
+ toast('💾 بکاپ امن گرفته شد (بدون توکن)');
+};
+function ghClearToken(){ghSetToken('');const i=document.getElementById('gT');if(i)i.value='';toast('🧹 توکن از این مرورگر پاک شد')}
+function viewGh(){
+ const g=DB.gh||{owner:'',repo:'',path:'serge-budget-1406.json'};const hasTok=!!ghToken();
+ if(!isAdmin())return '<div class="card">⛔ فقط ادمین دسترسی دارد.</div>';
+ return '<div class="card"><h3>☁️ بکاپ نسخه‌دار در GitHub (فقط ادمین) 🔒</h3><div class="muted">نقش گیت‌هاب <b>دیتابیس نیست</b> — فقط <b>هاست فایل + بکاپ نسخه‌دار</b>. دیتای زنده روی سوپابیس است (RLS روشن). توکن هرگز در دیتابیس/اکسل/بکاپ ذخیره نمی‌شود؛ فقط در حافظه همین نشست مرورگر می‌ماند و با بستن تب می‌پرد.<br>توکن امن: <b dir="ltr">github.com → Settings → Developer settings → Fine-grained PAT</b> → فقط همین ریپو → <b>Contents: Read+Write</b> → تاریخ انقضا ۷ تا ۳۰ روزه. بعد از کار «پاک‌کردن توکن» را بزن.</div>'
+ +'<div class="grid2" style="margin-top:12px"><div class="field"><label>Token (فقط نشست جاری '+(hasTok?'✅ ثبت شده':'⏳ ثبت نشده')+')</label><input id="gT" type="password" value="" placeholder="ghp_xxxx — هرگز ذخیره دائم نمی‌شود"></div><div class="field"><label>Owner</label><input id="gO" value="'+esc(g.owner)+'" placeholder="amir-mohammadi"></div><div class="field"><label>Repo</label><input id="gR" value="'+esc(g.repo)+'" placeholder="serge-budget"></div><div class="field"><label>Path / Branch</label><input id="gP" value="'+esc(g.path||'serge-budget-1406.json')+'"><div class="muted">Branch: main</div></div></div>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" onclick="ghSaveCfg()">💾 ذخیره تنظیمات (بدون توکن)</button><button class="btn small ok" onclick="ghPush()">☁️ بکاپ امن در GitHub</button><button class="btn small ghost" onclick="ghPull()">⬇️ بازیابی از GitHub</button><button class="btn small pink" onclick="ghClearToken()">🧹 پاک‌کردن توکن نشست</button><button class="btn small ghost" onclick="backupJSON()">💾 بکاپ JSON امن</button></div><div class="muted" id="ghMsg" style="margin-top:8px"></div></div>';
+}
+function viewCloud(){
+ const on=isCloudOn();
+ if(!isAdmin()){
+  return '<div class="card"><h3>☁️ وضعیت سرور ابری</h3><div class="muted">اتصال مرکزی '+(on?'✅ فعال است — نسخه‌ها با کنترل نسخه همگام می‌شود.':'⏳ هنوز توسط ادمین فعال نشده — فعلا فقط روی همین دستگاه.')+'</div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn small" onclick="cloudPull(false)">⬇️ دریافت آخرین نسخه</button><button class="btn small ghost" onclick="go(\'msg\')">💬 پیام به ادمین</button></div><div class="muted" id="cloudMsg" style="margin-top:8px"></div></div>'
+  +'<div class="card"><h3>🛡️ امنیت تو</h3><div class="muted">• هر ۴۵ دقیقه خودکار خارج می‌شوی.<br>• بعد از ۵ رمز اشتباه ۲ دقیقه قفل می‌شوی.<br>• فقط جدول واحد خودت را دست بزن؛ آخرین نسخه برنده است.</div></div>';
+ }
+ const sql="-- Supabase: SQL Editor → New query → Run (فقط یک‌بار):\n-- RLS روشن می‌ماند (غیرفعال نکن!)\ncreate table if not exists panel_state (\n  id int primary key,\n  data jsonb not null default '{}'::jsonb,\n  version int not null default 1 check (version > 0),\n  updated_at timestamptz not null default now(),\n  updated_by text not null default 'system'\n);\ncreate table if not exists panel_history (\n  seq bigserial primary key,\n  data jsonb not null,\n  saved_by text not null default 'unknown',\n  saved_at timestamptz not null default now(),\n  note text not null default ''\n);\nalter table panel_state enable row level security;\nalter table panel_history enable row level security;\n-- Policies: در فایل supabase-secure.sql (همراه بسته) — کپی/اجرا کن.";
+ return '<div class="card"><h3>☁️ سرور ابری امن — راهنمای اصولی 👑🔒</h3><div class="muted">معماری امن: <b>GitHub Pages</b> (هاست HTTPS) + <b>Supabase با RLS روشن</b> (دیتای زنده + تاریخچه) + <b>GitHub</b> (فقط بکاپ نسخه‌دار). دیتابیس روی گیت‌هاب نمی‌گذاریم چون: توکن لو می‌رود، RLS ندارد، کانفلیکت دارد، کش/کند است و داده مالی لو می‌رود.</div>'
+ +'<div class="grid3" style="margin-top:12px"><div class="kpi"><small>وضعیت</small><b style="font-size:15px">'+(on?'✅ متصل امن':'⏳ تنظیم نشده')+'</b><div class="muted">https اجباری • نسخه v'+((DB._meta&&DB._meta.version)||1)+'</div></div><div class="kpi"><small>آخرین ارسال</small><b style="font-size:15px">'+(lastCloudPush?new Date(lastCloudPush).toLocaleString('fa-IR'):'—')+'</b></div><div class="kpi"><small>آخرین دریافت</small><b style="font-size:15px">'+(lastCloudPull?new Date(lastCloudPull).toLocaleString('fa-IR'):'—')+'</b></div></div></div>'
+ +'<div class="card"><h3>🔌 قدم ۱ — سوپابیس امن (۵ دقیقه)</h3><div class="muted">۱) <b dir="ltr">supabase.com</b> → New Project → <b dir="ltr">serge-budget</b>.<br>۲) <b>SQL Editor → New query</b> → فایل <b dir="ltr">supabase-secure.sql</b> (داخل بسته) را کامل Paste و Run کن — RLS روشن می‌ماند.<br>۳) <b>Project Settings → API</b> → <b dir="ltr">Project URL (https)</b> و <b dir="ltr">anon public key</b> را کپی کن (service_role را هرگز در سایت نگذار).<br>۴) پایین وارد کن → ذخیره → تست → آپلود دستی.</div>'
+ +'<div style="background:#00000055;border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;direction:ltr;text-align:left;font-size:12px;white-space:pre-wrap" id="sqlBox">'+esc(sql)+'</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small ghost" onclick="copySql()">📋 کپی SQL خلاصه</button><button class="btn small ghost" onclick="cloudHistory()">📜 تاریخچه ۲۰ نسخه آخر</button></div><div id="histBox" style="margin-top:8px"></div>'
+ +'<div class="grid2" style="margin-top:10px"><div class="field"><label>Project URL (https://…)</label><input id="cUrl" dir="ltr" value="'+esc(CLOUD.url)+'" placeholder="https://xyz.supabase.co"></div><div class="field"><label>anon public key</label><input id="cKey" dir="ltr" type="password" value="'+esc(CLOUD.key)+'" placeholder="eyJhbG…"></div><div class="field"><label>جدول</label><input id="cTbl" dir="ltr" value="'+esc(CLOUD.table)+'"></div><div class="field"><label>ردیف</label><input id="cRow" dir="ltr" type="number" value="'+CLOUD.rowId+'"></div></div>'
+ +'<label style="font-size:13px"><input type="checkbox" id="cAuto" '+(CLOUD.auto?'checked':'')+'> همگام‌سازی خودکار (پیشنهاد: روشن)</label>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn small" onclick="saveCloudCfg2()">💾 ذخیره</button><button class="btn small ghost" onclick="testCloud()">🔗 تست</button><button class="btn small ok" onclick="cloudPush(false)">☁️ آپلود دستی</button><button class="btn small pink" onclick="cloudPull(false)">⬇️ دانلود دستی</button></div><div class="muted" id="cloudMsg" style="margin-top:8px"></div></div>'
+ +'<div class="card"><h3>🌐 قدم ۲ — انتشار (GitHub Pages)</h3><div class="muted">ریپو Public → آپلود <b dir="ltr">index.html</b> → Settings → Pages → main/root → لینک <b dir="ltr">https://USERNAME.github.io/serge-budget/</b> را به واحدها بده. ورودها مثل قبل. اگر supabase برای واحدی باز نشد، حالت محلی کار می‌کند؛ ادمین بعدا همگام می‌کند.</div>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small ghost" onclick="backupJSON()">💾 بکاپ امن JSON</button><button class="btn small ghost" onclick="go(\'gh\')">🔒 بکاپ نسخه‌دار GitHub</button><button class="btn small ghost" onclick="exportAll()">📤 اکسل هیئت‌مدیره</button></div></div>'
+ +'<div class="card"><h3>🛡️ چرا این امن‌ترین است؟</h3><div class="muted">• RLS همیشه روشن؛ delete از API ممنوع؛ history فقط افزودنی.<br>• نسخه‌بندی: هر ذخیره v+۱؛ اگر سرور جدیدتر باشد رونویسی نمی‌شود (اول Pull).<br>• توکن گیت‌هاب فقط در نشست ادمین، هرگز در ابر/بکاپ/اکسل.<br>• قفل ورود + خروج خودکار ۴۵ دقیقه + ضد XSS (esc) + https اجباری.<br>• قانون طلایی: قبل از بستن، آپلود دستی؛ هفته‌ای یک‌بار بکاپ JSON + بکاپ GitHub.</div></div>';
+}
+function copySql(){const t=document.getElementById('sqlBox').innerText;navigator.clipboard.writeText(t).then(()=>toast('📋 کپی شد'))}
+</script>
+
+
+<script>
+// ============ SERGE ONLINE v4 — GitHub-native central DB (Iran-compatible, no Supabase) ============
+(function(){
+const SYNC_KEY='serge_online_cfg_v1';
+const TOK_KEY='serge_gh_pat_session';
+let CFG={owner:'',repoDb:'',path:'serge-budget-1406-db.json',branch:'main'};
+try{const s=localStorage.getItem(SYNC_KEY);if(s){const j=JSON.parse(s);CFG={...CFG,...j}}}catch(e){}
+let oBusy=false, oPushT=null, lastEditT=0, lastPushT=0, lastPullT=0;
+function esc2(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function tok(){try{return (sessionStorage.getItem(TOK_KEY)||'').trim()}catch(e){return ''}}
+function setTok(v){try{if(v)sessionStorage.setItem(TOK_KEY,v);else sessionStorage.removeItem(TOK_KEY)}catch(e){}}
+function isCfg(){return CFG.owner&&CFG.repoDb}
+function isOnline(){return isCfg()&&tok().length>10}
+function apiBase(){return 'https://api.github.com/repos/'+encodeURIComponent(CFG.owner)+'/'+encodeURIComponent(CFG.repoDb)+'/contents/'+encodeURIComponent(CFG.path)}
+function hdr(raw){const h={Accept:raw?'application/vnd.github.raw':'application/vnd.github+json'};const t=tok();if(t)h.Authorization='Bearer '+t;return h}
+function chip(st){
+ const el=document.getElementById('cloudChip');if(!el)return;
+ if(!isCfg()){el.textContent='☁️ حالت محلی (تنظیم نشده)';el.style.background='#64748b33';return}
+ if(!tok()){el.textContent='☁️ نیاز به توکن (نشست)';el.style.background='#f59e0b44';return}
+ if(st==='pushing'){el.textContent='☁️ در حال ارسال به سرور مرکزی…';el.style.background='#f59e0b44'}
+ else if(st==='pulling'){el.textContent='☁️ در حال دریافت از سرور…';el.style.background='#06b6d444'}
+ else if(st==='error'){el.textContent='☁️ خطای اتصال ❌';el.style.background='#ef444444'}
+ else if(st==='dirty'){el.textContent='☁️ ذخیره محلی ✓ • آماده ارسال';el.style.background='#8b5cf644'}
+ else{el.textContent='🟢 آنلاین • سرور مرکزی GitHub';el.style.background='#10b98144'}
+}
+function cleanDB(){try{const c=JSON.parse(JSON.stringify(DB));if(c.gh)c.gh.token='';return c}catch(e){return DB}}
+async function apiGet(){
+ const url=apiBase()+'?ref='+encodeURIComponent(CFG.branch||'main');
+ const r=await fetch(url,{headers:hdr(false)});
+ if(r.status===404)return {empty:true,sha:null,remote:null};
+ if(!r.ok){const tx=await r.text();throw new Error('GitHub '+r.status+': '+tx.slice(0,200))}
+ const j=await r.json();
+ const txt=decodeURIComponent(escape(atob(j.content.replace(/\n/g,''))));
+ let obj=null;try{obj=JSON.parse(txt)}catch(e){throw new Error('فایل مرکزی JSON معتبر نیست')}
+ return {empty:false,sha:j.sha,remote:obj};
+}
+async function rawGet(){
+ const url='https://raw.githubusercontent.com/'+encodeURIComponent(CFG.owner)+'/'+encodeURIComponent(CFG.repoDb)+'/'+encodeURIComponent(CFG.branch||'main')+'/'+encodeURIComponent(CFG.path)+'?t='+Date.now();
+ const r=await fetch(url);if(!r.ok)throw new Error('raw '+r.status);
+ return await r.json();
+}
+function myU(){try{if(typeof ME!=='undefined'&&ME)return ME.unit==='admin'?'admin':ME.unit}catch(e){}return null}
+function mergeRemote(remoteData,myUnit){
+ // admin: full replace (sees everything realtime)
+ if(!myUnit||myUnit==='admin')return remoteData;
+ // unit: keep my unsent local unit section if edited very recently, else take remote for others + admin fields
+ const local=DB;
+ const merged=JSON.parse(JSON.stringify(remoteData));
+ try{
+  const lu=local.units&&local.units[myUnit], ru=remoteData.units&&remoteData.units[myUnit];
+  // if I edited in last 10s and haven't pushed, keep mine for my section
+  if(lu&&(Date.now()-lastEditT<10000)){merged.units[myUnit]=lu}
+  // messages: union by id/time
+  const seen={};const arr=[];
+  (remoteData.msgs||[]).concat(local.msgs||[]).forEach(m=>{const k=m.id||(m.date+m.from+m.text);if(!seen[k]){seen[k]=1;arr.push(m)}});
+  arr.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+  merged.msgs=arr.slice(-300);
+  // reads: union (keep latest per unit+ann)
+  merged.reads=Object.assign({},remoteData.reads||{},local.reads||{});
+  // keep remote ann/fx/timeline/calc (admin source of truth)
+ }catch(e){}
+ return merged;
+}
+// ---- save override: local + debounced central push ----
+try{
+ if(typeof saveLocalOnly==='undefined'){window.saveLocalOnly=function(){try{localStorage.setItem(LSKEY,JSON.stringify(DB))}catch(e){}}}
+}catch(e){}
+save=function(){
+ try{if(!DB._meta)DB._meta={version:1};DB._meta.updatedAt=nowISO();DB._meta.by=(typeof ME!=='undefined'&&ME)?ME.unit:'system'}catch(e){}
+ try{localStorage.setItem(LSKEY,JSON.stringify(DB))}catch(e){}
+ lastEditT=Date.now();chip('dirty');queuePush();
+};
+function queuePush(){
+ if(!isOnline())return;
+ clearTimeout(oPushT);
+ oPushT=setTimeout(()=>pushOnline(true),2500);
+}
+async function pushOnline(silent,force){
+ if(!isCfg()){if(!silent)toast('❌ اول مالک/ریپو دیتا را تنظیم کن');return}
+ if(!tok()){if(!silent)toast('❌ توکن نشست را وارد کن (فقط همین مرورگر)');return}
+ if(oBusy){return}
+ oBusy=true;chip('pushing');
+ try{
+  let cur=await apiGet().catch(()=>({empty:true,sha:null,remote:null}));
+  const lv=(DB._meta&&parseInt(DB._meta.version))||1;
+  if(!cur.empty&&cur.remote&&!force){
+   const rv=parseInt(cur.remote.version)||1;
+   if(rv>lv){
+    // someone else saved newer -> merge then push merged
+    const mu=myU();
+    const merged=mergeRemote(cur.remote.data||cur.remote,mu);
+    // if merged still has old version conflict, adopt remote version then push
+    DB=merged;if(!DB._meta)DB._meta={};DB._meta.version=rv;
+    try{localStorage.setItem(LSKEY,JSON.stringify(DB))}catch(e){}
+    try{if(typeof updateProg==='function')updateProg()}catch(e){}
+    try{if(typeof render==='function')render()}catch(e){}
+    if(!silent)toast('🔄 نسخه جدیدتر بود، ادغام شد — دوباره ارسال می‌شود');
+    cur=await apiGet();
+   }
+  }
+  const newV=((DB._meta&&parseInt(DB._meta.version))||1)+ (cur.empty?0:0);
+  // bump: max(local,remote)+1
+  let base=lv;
+  if(cur.remote&&cur.remote.version)base=Math.max(base,parseInt(cur.remote.version)||1);
+  const nv=base+1;
+  const payload={version:nv,updatedAt:new Date().toISOString(),updatedBy:(DB._meta&&DB._meta.by)||'unknown',data:cleanDB()};
+  const body={message:'budget v'+nv+' by '+(payload.updatedBy)+' '+new Date().toISOString(),content:btoa(unescape(encodeURIComponent(JSON.stringify(payload,null,2)))),branch:CFG.branch||'main'};
+  if(cur.sha)body.sha=cur.sha;
+  const r=await fetch(apiBase(),{method:'PUT',headers:{...hdr(false),'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){const tx=await r.text();if(r.status===409)throw new Error('کانفلیکت (409) — Pull بزن بعد Push');throw new Error(tx.slice(0,250))}
+  DB._meta.version=nv;DB._meta.updatedAt=payload.updatedAt;
+  try{localStorage.setItem(LSKEY,JSON.stringify(DB))}catch(e){}
+  lastPushT=Date.now();chip('online');
+  if(!silent)toast('☁️ روی سرور مرکزی ذخیره شد ✅ (v'+nv+')');
+  const m=document.getElementById('cloudMsg');if(m)m.textContent='✅ آخرین آپلود: '+nowStr()+' • نسخه v'+nv;
+ }catch(e){chip('error');if(!silent)toast('❌ '+String(e.message||e).slice(0,250))}
+ oBusy=false;
+}
+async function pullOnline(silent){
+ if(!isCfg()){if(!silent)toast('❌ تنظیم نشده');return}
+ if(oBusy){return}
+ // public repo can read without token via raw; private needs token
+ if(!tok()){
+  // try raw public read
+  try{
+   oBusy=true;chip('pulling');
+   const obj=await rawGet();
+   const rd=obj.data||obj;if(!rd.units)throw new Error('دیتای سرور معتبر نیست');
+   const rv=parseInt(obj.version)||1, lv=(DB._meta&&parseInt(DB._meta.version))||1;
+   if(silent&&rv<=lv){oBusy=false;chip(isOnline()?'online':'dirty');return}
+   if(silent&&(Date.now()-lastEditT<8000)){oBusy=false;chip('dirty');return}
+   let ok=silent?true:confirm('نسخه سرور (v'+rv+') جایگزین شود؟');
+   if(ok){DB=mergeRemote(rd,myU());DB._meta=DB._meta||{};DB._meta.version=rv;try{localStorage.setItem(LSKEY,JSON.stringify(DB))}catch(e){}try{if(typeof updateProg==='function')updateProg()}catch(e){}try{if(typeof render==='function')render()}catch(e){}}
+   lastPullT=Date.now();chip(tok()?'online':'dirty');oBusy=false;return;
+  }catch(e){oBusy=false;chip('error');if(!silent)toast('❌ برای ریپوی Private توکن لازم است: '+String(e.message||e).slice(0,150));return}
+ }
+ oBusy=true;chip('pulling');
+ try{
+  const cur=await apiGet();
+  if(cur.empty){chip('online');if(!silent)toast('⚠️ سرور خالی است — اول آپلود کن');oBusy=false;return}
+  const rd=(cur.remote.data||cur.remote);if(!rd.units)throw new Error('دیتای سرور معتبر نیست');
+  const rv=parseInt(cur.remote.version)||1, lv=(DB._meta&&parseInt(DB._meta.version))||1;
+  if(silent&&rv<=lv){oBusy=false;chip('online');return}
+  if(silent&&(Date.now()-lastEditT<8000)){oBusy=false;chip('online');return}
+  let ok=true;
+  if(!silent)ok=confirm('نسخه سرور (v'+rv+') جایگزین این دستگاه (v'+lv+') شود؟');
+  if(ok||silent){
+   if(silent&&rv>lv){DB=mergeRemote(rd,myU())}
+   else if(ok){DB=mergeRemote(rd,myU())}
+   else{oBusy=false;chip('online');return}
+   DB._meta=DB._meta||{};DB._meta.version=rv;DB._meta.updatedAt=cur.remote.updatedAt;
+   try{localStorage.setItem(LSKEY,JSON.stringify(DB))}catch(e){}
+   try{if(typeof updateProg==='function')updateProg()}catch(e){}
+   try{if(typeof render==='function')render()}catch(e){}
+   if(!silent)toast('⬇️ از سرور مرکزی خوانده شد ✅ (v'+rv+')');
+  }
+  lastPullT=Date.now();chip('online');
+  const m=document.getElementById('cloudMsg');if(m)m.textContent='✅ آخرین دریافت: '+nowStr()+' • v'+rv;
+ }catch(e){chip('error');if(!silent)toast('❌ '+String(e.message||e).slice(0,250))}
+ oBusy=false;
+}
+// keep old names working
+cloudPush=function(s){return pushOnline(s===true?true:false)};
+cloudPull=function(s){return pullOnline(s===true?true:false)};
+updateCloudChip=chip;
+setTimeout(()=>chip(),800);
+setInterval(async()=>{
+ if(!isCfg()||!tok())return;
+ if(document.hidden)return;
+ if(typeof ME==='undefined'||!ME)return;
+ if(Date.now()-lastEditT<12000)return;
+ if(Date.now()-lastPullT<15000)return;
+ try{
+  let rv=0;const lv=(DB._meta&&parseInt(DB._meta.version))||1;
+  try{const c=await apiGet();if(c.remote)rv=parseInt(c.remote.version)||0}catch(e){return}
+  if(rv>lv+0){await pullOnline(true)}
+ }catch(e){}
+},15000);
+window.addEventListener('focus',()=>{if(isCfg()&&tok()&&(Date.now()-lastPullT>30000))pullOnline(true)});
+function saveOnlineCfg(){
+ CFG.owner=(document.getElementById('oOwn')?.value||'').trim();
+ CFG.repoDb=(document.getElementById('oRepo')?.value||'').trim();
+ CFG.path=(document.getElementById('oPath')?.value||'serge-budget-1406-db.json').trim()||'serge-budget-1406-db.json';
+ CFG.branch=(document.getElementById('oBr')?.value||'main').trim()||'main';
+ const t=(document.getElementById('oTok')?.value||'').trim();
+ if(t)setTok(t);
+ try{localStorage.setItem(SYNC_KEY,JSON.stringify(CFG))}catch(e){}
+ chip();toast('💾 تنظیمات سرور مرکزی ذخیره شد (توکن فقط همین نشست)');
+ try{pullOnline(true)}catch(e){}
+}
+function clearTok(){setTok('');const i=document.getElementById('oTok');if(i)i.value='';chip();toast('🧹 توکن از این مرورگر پاک شد')}
+async function onlineHistory(){
+ const m=document.getElementById('cloudMsg');if(m)m.textContent='⏳ خواندن تاریخچه…';
+ try{
+  if(!isCfg())throw new Error('تنظیم نشده');
+  const url='https://api.github.com/repos/'+encodeURIComponent(CFG.owner)+'/'+encodeURIComponent(CFG.repoDb)+'/commits?path='+encodeURIComponent(CFG.path)+'&sha='+encodeURIComponent(CFG.branch||'main')+'&per_page=20';
+  const r=await fetch(url,{headers:hdr(false)});if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  const box=document.getElementById('histBox');
+  if(box)box.innerHTML=j.length?j.map(c=>'<div style="font-size:12px;border-bottom:1px solid var(--line);padding:6px 0">🔖 '+esc2((c.commit.message||'').slice(0,90))+'<br><span class="muted">'+esc2(c.commit.author?.date||'')+' • '+esc2(c.sha||'').slice(0,7)+'</span></div>').join(''):'<div class="muted">تاریخی نیست</div>';
+  if(m)m.textContent='✅ '+j.length+' نسخه (کامیت) — هیچ دیتایی پاک نمی‌شود، همه‌چیز در گیت هست';
+ }catch(e){if(m)m.textContent='❌ '+String(e.message||e).slice(0,200)}
+}
+// ---- UI overrides ----
+viewCloud=function(){
+ const on=isOnline();
+ if(!isAdmin()){
+  return '<div class="card"><h3>🟢 سرور مرکزی</h3><div class="muted">وضعیت: '+(on?'✅ متصل — تغییرات واحدها خودکار می‌آید (هر ~۱۵ ثانیه).':'⏳ '+(isCfg()?'توکن نشست را وارد کن (از ادمین بگیر)':'منتظر تنظیم ادمین'))+'</div><div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn small" onclick="pullOnline(false)">⬇️ دریافت آخرین نسخه</button><button class="btn small ghost" onclick="go(\'msg\')">💬 پیام به ادمین</button></div><div class="muted" id="cloudMsg" style="margin-top:8px"></div></div>'
+  +'<div class="card"><h3>🌐 آدرس ورود</h3><div class="muted">همه با یک آدرس وارد می‌شوند: <b dir="ltr">https://USERNAME.github.io/serge-budget/</b> (بعد از انتشار). هرکس یوزر/پس خودش. اگر نسخه جدید نمی‌بینی «دریافت آخرین نسخه» را بزن.</div><div class="muted">🛡️ توکن تو فقط در همین مرورگر می‌ماند، در دیتا/بکاپ/اکسل ذخیره نمی‌شود.</div></div>';
+ }
+ return '<div class="card"><h3>🟢 سرور مرکزی آنلاین — راهنمای اصولی ایران 👑</h3><div class="muted">معماری بدون تحریم: <b>GitHub Pages</b> (هاست، یک آدرس برای همه) + <b>فایل مرکزی در ریپوی Private</b> (دیتابیس نسخه‌دار) + <b>توکن per-device فقط در نشست</b>. سوپابیس از ایران خطای <b dir="ltr">Access from your region is restricted</b> می‌دهد، پس حذف شد. گیت‌هاب برای ایران مجوز OFAC دارد و از ایران باز است.</div>'
+ +'<div class="grid3" style="margin-top:12px"><div class="kpi"><small>وضعیت</small><b style="font-size:15px">'+(on?'✅ آنلاین':'⏳ ناقص')+'</b><div class="muted">نسخه محلی v'+((DB._meta&&DB._meta.version)||1)+'</div></div><div class="kpi"><small>آخرین ارسال</small><b style="font-size:15px">'+(lastPushT?new Date(lastPushT).toLocaleString('fa-IR'):'—')+'</b></div><div class="kpi"><small>آخرین دریافت</small><b style="font-size:15px">'+(lastPullT?new Date(lastPullT).toLocaleString('fa-IR'):'—')+'</b></div></div></div>'
+ +'<div class="card"><h3>🔌 قدم ۱ — ساخت مخزن دیتا (۳ دقیقه، یک‌بار)</h3><div class="muted">۱) در گیت‌هاب یک ریپوی <b>Private</b> بساز مثلا <b dir="ltr">serge-budget-db</b> (تیک Add README بزن).<br>۲) یک ریپوی جدا (Public یا Private) برای هاست مثلا <b dir="ltr">serge-budget</b> بساز — فایل همین پنل با نام <b dir="ltr">index.html</b> را در آن آپلود کن.<br>۳) همان ریپوی هاست: Settings → Pages → Branch main/root → لینک <b dir="ltr">https://USERNAME.github.io/serge-budget/</b> را به ۶ واحد بده.<br>۴) چرا دو ریپو؟ کد (قابل دیدن) جدا از دیتای مالی (خصوصی). دیتا هرگز عمومی نمی‌شود.</div></div>'
+ +'<div class="card"><h3>🔑 قدم ۲ — توکن‌ها (per-unit، امن)</h3><div class="muted">در گیت‌هاب: Settings → Developer settings → Personal access tokens → <b>Fine-grained</b> → Generate → فقط ریپوی <b dir="ltr">serge-budget-db</b> → Permissions: <b>Contents: Read+Write</b> → انقضا ۳۰-۹۰ روزه.<br>• برای خودت یک توکن ادمین بساز و پایین وارد کن (فقط همین مرورگر، با بستن تب می‌پرد).<br>• برای هر واحد هم می‌توانی یک توکن جدا بسازی و خصوصی به خودش بدهی (مالی، تولید...). هرکس توکن خودش را در دستگاه خودش وارد می‌کند. توکن هیچ‌وقت در سرور/بکاپ/اکسل ذخیره نمی‌شود.<br>⚠️ اگر ریپوی دیتا Public باشد، بدون توکن هم خوانده می‌شود (امن نیست برای بودجه) — حتما Private کن.</div>'
+ +'<div class="grid2" style="margin-top:10px"><div class="field"><label>Owner (نام کاربری گیت‌هاب)</label><input id="oOwn" dir="ltr" value="'+esc2(CFG.owner)+'" placeholder="amir-mohammadi"></div><div class="field"><label>ریپوی دیتا (Private)</label><input id="oRepo" dir="ltr" value="'+esc2(CFG.repoDb)+'" placeholder="serge-budget-db"></div><div class="field"><label>مسیر فایل</label><input id="oPath" dir="ltr" value="'+esc2(CFG.path)+'"></div><div class="field"><label>شاخه</label><input id="oBr" dir="ltr" value="'+esc2(CFG.branch)+'"></div></div>'
+ +'<div class="field"><label>توکن نشست (فقط همین مرورگر '+(tok()?'✅ ثبت شده':'⏳ ثبت نشده')+')</label><input id="oTok" dir="ltr" type="password" value="" placeholder="github_pat_xxxx — ذخیره دائم نمی‌شود"></div>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" onclick="saveOnlineCfg()">💾 ذخیره (بدون توکن دائم)</button><button class="btn small ghost" onclick="pullOnline(false)">⬇️ دریافت</button><button class="btn small ok" onclick="pushOnline(false)">☁️ ارسال دستی</button><button class="btn small pink" onclick="clearTok()">🧹 پاک‌کردن توکن</button><button class="btn small ghost" onclick="onlineHistory()">📜 تاریخچه نسخه‌ها</button></div><div class="muted" id="cloudMsg" style="margin-top:8px"></div><div id="histBox" style="margin-top:8px"></div></div>'
+ +'<div class="card"><h3>🌐 قدم ۳ — انتشار برای واحدها</h3><div class="muted">لینک ثابت را بده + یوزر/پس پنل هر واحد + توکن شخصی خودش (یک‌بار). ورودها مثل قبل:<br><b dir="ltr">mali/mali1406 • tamin/tamin1406 • tolid/tolid1406 • forosh/forosh1406 • mark/mark1406 • hr/hr1406</b> (ادمین: <b dir="ltr">amir.mohammadi</b>).<br>• هر واحد فقط جدول خودش را دست می‌زند (آخرین ذخیره هر بخش برنده است، ولی بخش‌های مختلف همدیگر را پاک نمی‌کنند چون ادغام per-unit است).<br>• تو هر لحظه در مانیتورینگ همه را می‌بینی چون هر ~۱۵ ثانیه Pull خودکار می‌شود.</div>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small ghost" onclick="backupJSON()">💾 بکاپ امن JSON</button><button class="btn small ghost" onclick="go(\'gh\')">🔒 بکاپ/بازیابی</button><button class="btn small ghost" onclick="exportAll()">📤 اکسل هیئت‌مدیره</button></div></div>'
+ +'<div class="card"><h3>🛡️ چرا دیتا نمی‌پرد؟</h3><div class="muted">• تک‌منبع: فقط فایل مرکزی معیار است.<br>• نسخه‌بندی: هر ذخیره v+۱؛ کانفلیکت 409 خودکار ادغام می‌شود.<br>• تاریخچه گیت: هر ذخیره یک کامیت — حتی اگر اشتباهی پاک شود از History برمی‌گردد.<br>• سه لایه: مرورگر (محلی) + گیت‌هاب (مرکزی) + بکاپ JSON هفتگی.<br>• قانون: قبل از بستن، «ارسال دستی»؛ هفته‌ای یک‌بار بکاپ JSON.</div></div>';
+};
+viewGh=function(){
+ if(!isAdmin())return '<div class="card">⛔ فقط ادمین دسترسی دارد.</div>';
+ const has=!!tok();
+ return '<div class="card"><h3>🔒 بکاپ و توکن نشست (فقط ادمین)</h3><div class="muted">توکن فقط در حافظه همین نشست است، هرگز در دیتا/ابر/بکاپ/اکسل نمی‌رود. ریپوی دیتا Private بماند. توکن امن: Fine-grained → فقط ریپوی دیتا → Contents Read+Write → انقضا کوتاه.</div>'
+ +'<div class="grid2" style="margin-top:12px"><div class="field"><label>توکن نشست '+(has?'✅':'⏳')+'</label><input id="gT" type="password" value="" placeholder="github_pat_xxxx"></div><div class="field"><label>یادداشت</label><input value="با بستن تب می‌پرد" disabled></div></div>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" onclick="useGhTok()">💾 ثبت توکن نشست</button><button class="btn small ok" onclick="pushOnline(false)">☁️ بکاپ امن روی سرور مرکزی</button><button class="btn small ghost" onclick="pullOnline(false)">⬇️ بازیابی از سرور</button><button class="btn small pink" onclick="clearTok();document.getElementById(\'gT\').value=\'\'">🧹 پاک‌کردن</button><button class="btn small ghost" onclick="backupJSON()">💾 بکاپ JSON امن</button></div><div class="muted" id="ghMsg" style="margin-top:8px"></div></div>';
+};
+window.useGhTok=function(){const v=(document.getElementById('gT')?.value||'').trim();if(v)setTok(v);toast(v?'✅ توکن نشست ثبت شد':'⏳ خالی است');chip();const m=document.getElementById('ghMsg');if(m)m.textContent=v?'✅ ثبت شد (فقط همین مرورگر)':''};
+window.saveOnlineCfg=saveOnlineCfg;window.pullOnline=pullOnline;window.pushOnline=pushOnline;window.clearTok=clearTok;window.onlineHistory=onlineHistory;
+window.cloudPush=cloudPush;window.cloudPull=cloudPull;
+})();
+</script>
+
+</body>
+</html>
